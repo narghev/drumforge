@@ -1,4 +1,5 @@
 import { ExerciseList } from '../components/ExerciseList';
+import { Footer } from '../components/Footer';
 import { ThemeToggle } from '../components/ThemeToggle';
 import { useDocumentTitle } from '../lib/useDocumentTitle';
 
@@ -6,7 +7,7 @@ export function HomePage() {
   useDocumentTitle(undefined);
 
   return (
-    <div className="mx-auto max-w-5xl px-6 py-10">
+    <div className="mx-auto flex min-h-screen max-w-5xl flex-col px-6 py-10">
       <header className="mb-8 flex items-start justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Drum Exercises</h1>
@@ -17,6 +18,7 @@ export function HomePage() {
         <ThemeToggle />
       </header>
       <ExerciseList />
+      <Footer />
     </div>
   );
 }
