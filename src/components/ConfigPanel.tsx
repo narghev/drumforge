@@ -19,27 +19,41 @@ function groupFields(fields: ConfigFieldType[]): Map<string, ConfigFieldType[]> 
 
 export function ConfigPanel({ exercise, config, onChange }: Props) {
   const groups = groupFields(exercise.configFields);
+  const groupArray = Array.from(groups.entries());
 
   return (
-    <aside className="flex w-full flex-col gap-6 rounded-lg border border-gray-200 bg-white p-5 lg:w-72">
-      {Array.from(groups.entries()).map(([groupName, fields]) => (
-        <section key={groupName} className="flex flex-col gap-3">
-          <h2 className="text-sm font-semibold text-gray-900">{groupName}</h2>
-          {fields.map((field) => {
-            const constraints = exercise.getFieldConstraints?.(field.key, config);
-            return (
-              <ConfigField
-                key={field.key}
-                field={field}
-                value={config[field.key]}
-                effectiveMin={constraints?.min}
-                effectiveMax={constraints?.max}
-                onChange={(value) => onChange({ [field.key]: value })}
-              />
-            );
-          })}
-        </section>
-      ))}
-    </aside>
+    <div className="rounded-lg border border-gray-200 bg-white px-5 py-3">
+      <div className="flex flex-wrap items-end gap-x-8 gap-y-4">
+        {groupArray.map(([groupName, fields], i) => (
+          <section
+            key={groupName}
+            className={`flex items-end gap-3 ${
+              i < groupArray.length - 1
+                ? 'lg:border-r lg:border-gray-200 lg:pr-8'
+                : ''
+            }`}
+          >
+            <h2 className="self-end text-[10px] font-semibold uppercase tracking-wider text-gray-400">
+              {groupName}
+            </h2>
+            <div className="flex flex-wrap items-end gap-3">
+              {fields.map((field) => {
+                const constraints = exercise.getFieldConstraints?.(field.key, config);
+                return (
+                  <ConfigField
+                    key={field.key}
+                    field={field}
+                    value={config[field.key]}
+                    effectiveMin={constraints?.min}
+                    effectiveMax={constraints?.max}
+                    onChange={(value) => onChange({ [field.key]: value })}
+                  />
+                );
+              })}
+            </div>
+          </section>
+        ))}
+      </div>
+    </div>
   );
 }

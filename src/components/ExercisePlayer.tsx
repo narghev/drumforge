@@ -32,6 +32,7 @@ export function ExercisePlayer({ exercise, config }: Props) {
 
     const api = new AlphaTabApi(containerRef.current, buildSettings(scrollRef.current));
     apiRef.current = api;
+    api.isLooping = true;
 
     const onPlayerReady = () => setReady(true);
     const onPlayerStateChanged = (e: { state: synth.PlayerState }) => {
@@ -55,21 +56,6 @@ export function ExercisePlayer({ exercise, config }: Props) {
     apiRef.current?.tex(exercise.generateAlphaTex(config));
   }, [exercise, config]);
 
-  useEffect(() => {
-    const api = apiRef.current;
-    if (!api) return;
-    const onFinished = () => {
-      const timerExpired = totalSeconds > 0 && remaining === 0;
-      if (!timerExpired) {
-        api.playPause();
-      }
-    };
-    api.playerFinished.on(onFinished);
-    return () => {
-      api.playerFinished.off(onFinished);
-    };
-  }, [remaining, totalSeconds]);
-
   const handlePlayPause = () => {
     apiRef.current?.playPause();
   };
@@ -80,10 +66,10 @@ export function ExercisePlayer({ exercise, config }: Props) {
   };
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex h-full flex-col gap-4">
       <div
         ref={scrollRef}
-        className="h-[420px] overflow-auto rounded-lg border border-gray-200 bg-white"
+        className="min-h-0 flex-1 overflow-auto rounded-lg border border-gray-200 bg-white"
       >
         <div ref={containerRef} />
       </div>

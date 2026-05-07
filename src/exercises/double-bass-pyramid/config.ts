@@ -14,7 +14,7 @@ export const configFields: ConfigField[] = [
   },
   {
     key: 'start',
-    label: 'Pyramid start',
+    label: 'Start',
     type: 'number',
     default: 1,
     min: 1,
@@ -26,7 +26,7 @@ export const configFields: ConfigField[] = [
   },
   {
     key: 'end',
-    label: 'Pyramid end',
+    label: 'End',
     type: 'number',
     default: 4,
     min: 1,
@@ -38,7 +38,7 @@ export const configFields: ConfigField[] = [
   },
   {
     key: 'randomize',
-    label: 'Randomize order',
+    label: 'Randomize',
     type: 'action',
     default: false,
     enabled: false,

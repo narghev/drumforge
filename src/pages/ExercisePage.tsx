@@ -30,7 +30,7 @@ function ExerciseView({ exercise }: { exercise: ReturnType<typeof getExercise> &
   const [config, setConfig] = useExerciseConfig(exercise);
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-6xl flex-col gap-4 px-6 py-6">
+    <div className="mx-auto flex h-screen max-w-6xl flex-col gap-4 px-6 py-6">
       <Link to="/" className="text-sm text-blue-600 hover:underline">
         ← Back to exercises
       </Link>
@@ -38,11 +38,9 @@ function ExerciseView({ exercise }: { exercise: ReturnType<typeof getExercise> &
         <h1 className="text-2xl font-bold text-gray-900">{exercise.name}</h1>
         <p className="mt-1 text-sm text-gray-600">{exercise.description}</p>
       </header>
-      <div className="flex flex-col gap-4 lg:flex-row">
-        <div className="flex-1">
-          <ExercisePlayer exercise={exercise} config={config} />
-        </div>
-        <ConfigPanel exercise={exercise} config={config} onChange={setConfig} />
+      <ConfigPanel exercise={exercise} config={config} onChange={setConfig} />
+      <div className="flex min-h-0 flex-1 flex-col">
+        <ExercisePlayer exercise={exercise} config={config} />
       </div>
     </div>
   );

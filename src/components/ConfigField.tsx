@@ -10,28 +10,27 @@ interface Props {
 
 export function ConfigField({ field, value, onChange, effectiveMin, effectiveMax }: Props) {
   const baseInput =
-    'w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-400';
+    'w-full rounded-md border border-gray-300 bg-white px-2 py-1.5 text-sm text-gray-900 transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-400';
 
   const min = effectiveMin ?? field.min;
   const max = effectiveMax ?? field.max;
 
-  return (
-    <div className="flex flex-col gap-1">
-      <div className="flex items-center justify-between gap-2">
-        <label
-          htmlFor={`field-${field.key}`}
-          className={`text-xs font-medium uppercase tracking-wide ${field.enabled ? 'text-gray-700' : 'text-gray-400'}`}
-        >
-          {field.label}
-        </label>
-        {!field.enabled && (
-          <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-medium text-gray-500">
-            Coming soon
-          </span>
-        )}
-      </div>
+  const labelText = (
+    <span
+      title={field.description}
+      className={`text-[10px] font-medium uppercase tracking-wider ${
+        field.enabled ? 'text-gray-500' : 'text-gray-400'
+      } ${field.description ? 'cursor-help' : ''}`}
+    >
+      {field.label}
+      {!field.enabled && <span className="ml-1 text-gray-300">(soon)</span>}
+    </span>
+  );
 
-      {(field.type === 'number' || field.type === 'range') && (
+  if (field.type === 'number' || field.type === 'range') {
+    return (
+      <div className="flex w-20 flex-col gap-1">
+        <label htmlFor={`field-${field.key}`}>{labelText}</label>
         <input
           id={`field-${field.key}`}
           type={field.type === 'range' ? 'range' : 'number'}
@@ -43,26 +42,36 @@ export function ConfigField({ field, value, onChange, effectiveMin, effectiveMax
           onChange={(e) => onChange(Number(e.target.value))}
           className={baseInput}
         />
-      )}
+      </div>
+    );
+  }
 
-      {field.type === 'boolean' && (
-        <label
-          htmlFor={`field-${field.key}`}
-          className={`flex items-center gap-2 text-sm ${field.enabled ? 'text-gray-800' : 'text-gray-400'}`}
-        >
-          <input
-            id={`field-${field.key}`}
-            type="checkbox"
-            checked={Boolean(value)}
-            disabled={!field.enabled}
-            onChange={(e) => onChange(e.target.checked)}
-            className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 disabled:cursor-not-allowed"
-          />
-          <span>{Boolean(value) ? 'On' : 'Off'}</span>
-        </label>
-      )}
+  if (field.type === 'boolean') {
+    return (
+      <label
+        htmlFor={`field-${field.key}`}
+        className={`flex items-center gap-2 self-end pb-2 text-sm ${
+          field.enabled ? 'text-gray-800' : 'text-gray-400'
+        } ${field.description ? 'cursor-help' : 'cursor-pointer'}`}
+        title={field.description}
+      >
+        <input
+          id={`field-${field.key}`}
+          type="checkbox"
+          checked={Boolean(value)}
+          disabled={!field.enabled}
+          onChange={(e) => onChange(e.target.checked)}
+          className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 disabled:cursor-not-allowed"
+        />
+        <span>{field.label}</span>
+      </label>
+    );
+  }
 
-      {field.type === 'select' && field.options && (
+  if (field.type === 'select' && field.options) {
+    return (
+      <div className="flex flex-col gap-1">
+        <label htmlFor={`field-${field.key}`}>{labelText}</label>
         <select
           id={`field-${field.key}`}
           value={typeof value === 'string' ? value : String(field.default)}
@@ -76,24 +85,24 @@ export function ConfigField({ field, value, onChange, effectiveMin, effectiveMax
             </option>
           ))}
         </select>
-      )}
+      </div>
+    );
+  }
 
-      {field.type === 'action' && (
-        <button
-          type="button"
-          disabled={!field.enabled}
-          onClick={() => onChange(true)}
-          className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          {field.label}
-        </button>
-      )}
+  if (field.type === 'action') {
+    return (
+      <button
+        type="button"
+        disabled={!field.enabled}
+        onClick={() => onChange(true)}
+        title={field.description}
+        className="self-end rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        {field.label}
+        {!field.enabled && <span className="ml-1 text-xs text-gray-400">(soon)</span>}
+      </button>
+    );
+  }
 
-      {field.description && (
-        <p className={`text-xs ${field.enabled ? 'text-gray-500' : 'text-gray-400'}`}>
-          {field.description}
-        </p>
-      )}
-    </div>
-  );
+  return null;
 }
