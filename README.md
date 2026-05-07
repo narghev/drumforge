@@ -5,7 +5,9 @@ A free, browser-based interactive drum exercise website with synchronized scroll
 🥁 **[drumforge.app](https://drumforge.app)**
 
 ## Exercises
-- **Double Bass Pyramid** (1 to 8 kicks per beat, up and down)
+
+- **Double Bass Pyramid** — climb 1 to 8 kicks per beat and back down again, alternating right and left foot.
+- **Double Bass Rudiments** — apply classic stickings (singles, doubles, paradiddles, inverted paradiddles) to the feet, with an optional money-beat layer on top.
 
 ## Features
 

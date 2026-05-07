@@ -2,485 +2,291 @@
 
 ## Vision
 
-A free, browser-based drum exercise platform with synchronized scrolling notation (Songsterr-style), configurable BPM, timers, and — eventually — randomization and gamification. No login, no subscription. The MVP ships with one exercise (Double Bass Pyramid) and an architecture that makes adding more exercises trivial.
+A free, browser-based drum exercise platform with synchronized scrolling notation (Songsterr-style), configurable BPM, metronome, count-in, and a built-in practice timer. No login, no subscription. The exercise registry is built so adding a new exercise is "drop a folder, register it, done."
 
-## MVP Scope (this build)
+Live at **[drumforge.app](https://drumforge.app)** (Cloudflare Pages, deployed via the GitHub Action in `.github/workflows/deploy.yml`).
 
-- Single-page app, two routes:
-  - `/` — list of exercises (only one for now)
-  - `/exercises/:id` — exercise player view
-- One exercise: **Double Bass Pyramid**
-- Player loads with default config:
-  - Pyramid range: 1–8 (15 bars total: 1,2,3,4,5,6,7,8,7,6,5,4,3,2,1)
-  - BPM: 60
-  - Timer: 15 minutes
-- Notation rendered + played back via **alphaTab** with synchronized cursor
-- **Only BPM is editable** in the UI for MVP. All other config fields are visible but disabled (greyed out, "Coming soon" tooltip), so the user can see what's coming.
-- Playback loops the pyramid until the timer expires, at which point it stops automatically.
+## Current Exercises
 
-## Out of Scope for MVP (but architecture must support)
+- **Double Bass Pyramid** (`/exercises/double-bass-pyramid`, beginner) — climb 1→8 kicks per beat and back down, alternating right/left foot. Configurable start, end, BPM, and a Randomize action that picks a fresh sequence each click.
+- **Double Bass Rudiments** (`/exercises/double-bass-rudiments`, intermediate) — apply a classic sticking (singles, doubles, paradiddle, inverted paradiddle — both leads) to the kicks, with an optional money-beat layer (hi-hat + snare on top).
 
-The following must not be implemented now, but the data model, components, and folder structure must make these straightforward to add later without refactoring:
-
-- Configurable timer duration
-- Configurable pyramid start/end (e.g., 1–4, 3–8)
-- Randomization (e.g., generate a random sequence of subdivisions like `1 3 5 3 3 4 8`)
-- Hand pattern variations (different hi-hat/ride patterns)
-- Time signature variations
-- Additional exercises (rudiments, polyrhythms, paradiddle-feet, etc.)
-- Gamification (streaks, BPM personal bests, daily challenges)
-- User accounts / cloud persistence
+Both exercises share BPM, timer (minutes + seconds), metronome, and count-in via the reusable `ConfigField` definitions in `src/exercises/fields.ts`.
 
 ## Tech Stack
 
-- **Language**: **TypeScript (required, strict mode).** No `.js` or `.jsx` files anywhere in `src/`. The exercise registry pattern leans on the type system to keep new exercise contributions safe — the `ExerciseDefinition` contract is the type-checked guardrail that makes "add a folder, register it, done" actually work without breaking the player. `tsconfig.json` must have `"strict": true`.
-- **Framework**: React 18
-- **Build tool**: Vite
-- **Styling**: Tailwind CSS
-- **Notation + playback**: [`@coderline/alphatab`](https://www.npmjs.com/package/@coderline/alphatab) (MPL-2.0 — fine to consume as a dependency under any project license, since we don't modify its source files)
-- **Routing**: `react-router-dom`
+- **Language**: TypeScript, **strict mode**. No `.js` / `.jsx` files in `src/`. The exercise registry leans on the `ExerciseDefinition` type to keep new exercise contributions safe — that contract is what makes "add a folder, register it, done" actually work without breaking the player.
+- **Framework**: React 19
+- **Build tool**: Vite 7
+- **Styling**: Tailwind CSS (with `darkMode: 'class'` — see Theming)
+- **Notation + playback**: [`@coderline/alphatab`](https://www.npmjs.com/package/@coderline/alphatab) (MPL-2.0 — fine to consume as a dependency under MIT, since we don't modify its source)
+- **Routing**: `react-router-dom` v7
 - **State**: React `useState` / `useReducer` / `useContext`. No Redux.
-- **Persistence**: none for MVP (architect for `localStorage` later)
-- **URL state (required)**: every `ConfigField` must round-trip through query parameters so a configured exercise is shareable by URL. See "Shareable URL state" below.
+- **Persistence**: none — config lives in URL query params (see Shareable URL state)
+- **Package manager**: **`pnpm` exclusively.** Never `npm` or `yarn`. Commit `pnpm-lock.yaml`.
 
-## Shareable URL state (required)
+## Shareable URL state (load-bearing)
 
-The exercise page URL is the canonical source of truth for any non-default config. The user must be able to copy the URL, send it to a friend, and have the friend land on an identical setup.
+The exercise page URL is the canonical source of truth for any non-default config. Copy the URL → send to a friend → they land on an identical setup.
 
 **Rules:**
 
-- On `/exercises/:id` mount, hydrate the exercise config from `URLSearchParams`, falling back to `exerciseDef.defaultConfig` for any missing keys.
-- Whenever the user changes a config field, immediately update the URL via `history.replaceState` (or `useSearchParams` in `react-router-dom` v7 with `{ replace: true }` — no history entry per keystroke).
-- **Only encode non-default values.** If a field equals its default, omit it from the query string. This keeps shared URLs short and makes intent explicit (a friend opening `?bpm=140` clearly wanted 140, not "the default which happens to be 140 today").
-- Coerce types per `ConfigField.type`:
-  - `number` / `range` → `Number(value)`, ignore if `NaN` or out of `[min, max]`
-  - `boolean` → `'true'`/`'false'` ↔ `true`/`false`; reject anything else
-  - `select` → must match one of the field's `options[].value`
-  - `action` → not URL-encoded (transient triggers like "Randomize" don't belong in the URL; if a randomization produces a sequence the user wants to share, encode the *resolved seed*, not the action — see below)
-- **Disabled fields are still hydratable.** A field with `enabled: false` in the UI should still accept a value from the URL — this lets us pre-share configurations whose UI controls aren't built yet (e.g., share `?start=3&end=6` today even though the start/end inputs are greyed out).
-- Validate on hydrate; silently drop invalid values and log a `console.warn` so the player still loads.
-- Reserved param names: avoid using `id`, `t` (tempo override), or any single letter as a `ConfigField.key` to prevent collisions with future routing or analytics params.
+- On `/exercises/:id` mount, hydrate from `URLSearchParams`, falling back to `exerciseDef.defaultConfig` for any missing keys. The `useExerciseConfig(exercise)` hook in `src/lib/useExerciseConfig.ts` is the single place this happens — both `ConfigPanel` and `ExercisePlayer` consume it.
+- Whenever the user changes a config field, update the URL via `useSearchParams` with `{ replace: true }` — no history entry per keystroke.
+- **Only encode non-default values.** Fields equal to their default are omitted. Keeps shared URLs short and makes intent explicit (`?bpm=140` clearly wanted 140, not "the default which happens to be 140 today").
+- Coerce per `ConfigField.type`:
+  - `number` / `range` → `Number(value)`, drop if `NaN` or out of `[min, max]`
+  - `boolean` → `'true'` / `'false'`; reject anything else
+  - `select` → must match one of `options[].value`
+  - `action` → never URL-encoded (transient triggers)
+- **Disabled fields are still hydratable.** A field with `enabled: false` still accepts a URL value — lets us pre-share configurations whose UI controls aren't built yet.
+- **Hidden fields** (`hidden: true`) are persisted in the URL but not rendered in the panel. Used for `seed` on the pyramid's randomized mode.
+- Validate on hydrate; silently drop invalid values and `console.warn` so the player still loads.
+- **Reserved param names**: avoid `id`, `t`, or any single letter as a `ConfigField.key` to prevent collisions.
 
-**Randomization & seeds (forward-looking, not in MVP):**
+**Randomization & seeds:**
 
-- Pure randomization (`Math.random()`) is unshareable — never use it for anything that affects the generated AlphaTex.
-- When randomization lands, the generator must accept a `seed: number` config field. Randomize button = "pick a new seed and put it in the URL." The generator is then deterministic given `(config + seed)`.
+- Pure `Math.random()` is unshareable — never affect the AlphaTex with it directly.
+- The pyramid's randomization works as follows: clicking the "Randomize"/"Pyramid" action button toggles `?random=true` in the URL and the component picks a fresh seed (state-only, **not** in URL — re-clicking Randomize means "give me a new sequence", which would be weird if shareable). Each new visitor of `?random=true` sees their own random sequence. If a future exercise needs reproducible randomness, expose `seed` as a `hidden: true` ConfigField and put it in the URL.
 
-**Implementation hint:**
-
-A small `useExerciseConfig(exercise)` hook is the cleanest place to put this. It returns `[config, setConfig]`, reads/writes `URLSearchParams`, and handles coercion + validation against the exercise's `configFields`. Both `ConfigPanel` and `ExercisePlayer` consume the same hook so they stay in sync.
-
-## Folder Structure
+## Folder Structure (current)
 
 ```
 drumforge/
+├── .github/workflows/
+│   └── deploy.yml                      # Cloudflare Pages deploy
 ├── public/
-│   └── (static assets)
+│   ├── alphatab/                       # workers + worklet copied at build
+│   ├── soundfont/                      # FluidR3 .sf2
+│   ├── font/                           # Bravura music font
+│   ├── og-image.png, favicon.*, robots.txt, sitemap.xml, _redirects
 ├── src/
 │   ├── exercises/
-│   │   ├── types.ts                    # ExerciseDefinition, ConfigField types
+│   │   ├── types.ts                    # ExerciseDefinition, ConfigField, FieldConstraints
 │   │   ├── registry.ts                 # imports & exports all exercises
-│   │   └── double-bass-pyramid/
-│   │       ├── index.ts                # exports the ExerciseDefinition
-│   │       ├── metadata.ts             # name, slug, description, difficulty
-│   │       ├── config.ts               # config fields, defaults
-│   │       └── generator.ts            # (config) => AlphaTex string
+│   │   ├── fields.ts                   # shared ConfigField definitions (bpm, timer, metronome, …)
+│   │   ├── percussion.ts               # MIDI constants + baseDuration / buildNote helpers
+│   │   ├── rudiments.ts                # Rudiment library (used by double-bass-rudiments)
+│   │   ├── double-bass-pyramid/
+│   │   │   ├── index.ts                # exports the ExerciseDefinition
+│   │   │   ├── metadata.ts
+│   │   │   ├── config.ts
+│   │   │   └── generator.ts
+│   │   └── double-bass-rudiments/
+│   │       ├── index.ts
+│   │       ├── metadata.ts
+│   │       ├── config.ts
+│   │       └── generator.ts
 │   ├── components/
-│   │   ├── ExerciseList.tsx            # home page list/grid
-│   │   ├── ExerciseCard.tsx
-│   │   ├── ExercisePlayer.tsx          # alphaTab host + orchestration
-│   │   ├── ConfigPanel.tsx             # renders ConfigField[] dynamically
-│   │   ├── ConfigField.tsx             # one field renderer (number/range/bool/select)
-│   │   ├── PlaybackControls.tsx        # Play/Pause/Stop
-│   │   └── Timer.tsx                   # countdown display
+│   │   ├── ExerciseCard.tsx            # home page card
+│   │   ├── ExerciseList.tsx            # grid of cards
+│   │   ├── ExercisePlayer.tsx          # alphaTab host + Play/Pause/Stop + timer wiring
+│   │   ├── ConfigPanel.tsx             # renders ConfigField[] dynamically (groups, etc.)
+│   │   ├── ConfigField.tsx             # dispatches by type to the right field renderer
+│   │   ├── fields/                     # per-type field renderers
+│   │   │   ├── NumberField.tsx
+│   │   │   ├── SliderField.tsx         # used for type: 'range' (e.g. BPM)
+│   │   │   ├── BooleanField.tsx        # native checkbox, themed via accent-color
+│   │   │   ├── SelectField.tsx
+│   │   │   ├── ActionField.tsx
+│   │   │   ├── FieldLabel.tsx
+│   │   │   ├── styles.ts               # shared Tailwind class strings
+│   │   │   └── index.ts
+│   │   ├── Footer.tsx                  # "built by narghev" + GitHub link
+│   │   ├── ShareButton.tsx             # copies window.location.href, shows "Copied!"
+│   │   ├── ThemeToggle.tsx             # light/dark switch (home page only)
+│   │   └── Timer.tsx                   # MM:SS countdown display
 │   ├── lib/
-│   │   ├── alphatab-setup.ts           # init helpers, settings factory
-│   │   └── timer.ts                    # countdown hook (useCountdown)
+│   │   ├── alphatab-setup.ts           # buildSettings(scrollEl, theme) factory
+│   │   ├── timer.ts                    # useCountdown hook
+│   │   ├── useDocumentTitle.ts
+│   │   ├── useExerciseConfig.ts        # URL ⇄ config round-trip
+│   │   └── useTheme.ts                 # light/dark theme state
 │   ├── pages/
 │   │   ├── HomePage.tsx
-│   │   └── ExercisePage.tsx
-│   ├── App.tsx
+│   │   └── ExercisePage.tsx            # lazy-loaded (see App.tsx)
+│   ├── App.tsx                         # routes; ExercisePage is React.lazy'd
 │   ├── main.tsx
-│   └── index.css                       # tailwind directives
+│   └── index.css                       # tailwind directives + tokens
 ├── index.html
 ├── package.json
-├── tsconfig.json
+├── pnpm-lock.yaml
+├── tsconfig.json, tsconfig.app.json, tsconfig.node.json
 ├── vite.config.ts
 ├── tailwind.config.js
 ├── postcss.config.js
+├── eslint.config.js
 ├── LICENSE
+├── CONTRIBUTING.md
 ├── README.md
 └── CLAUDE.md
 ```
 
 ## Architecture: How to Add a New Exercise
 
-To add an exercise (post-MVP), the only required steps are:
+The required steps:
 
-1. Create a new folder under `src/exercises/` (e.g., `src/exercises/paradiddle-feet/`)
-2. Add `metadata.ts`, `config.ts`, `generator.ts`, `index.ts`
-3. Import and register it in `src/exercises/registry.ts`
+1. Create a folder under `src/exercises/` (e.g., `src/exercises/paradiddle-feet/`).
+2. Add `metadata.ts`, `config.ts`, `generator.ts`, `index.ts`.
+3. Reuse shared `ConfigField` definitions from `src/exercises/fields.ts` (`bpmField`, `timerMinutesField`, `timerSecondsField`, `metronomeField`, `countInField`, `moneyBeatField`). Override defaults via spread (e.g., `{ ...timerMinutesField, default: 3 }`) — don't redeclare the whole field unless the structure genuinely differs.
+4. Reuse `src/exercises/percussion.ts` (`KICK_RIGHT`, `KICK_LEFT`, `SNARE`, `HIHAT_CLOSED`, `baseDuration`, `buildNote`, `TUPLET_SUBDIVISIONS`) — the alphaTex MIDI-chord and tuplet conventions are encoded there. Don't duplicate them.
+5. Import and register the exercise in `src/exercises/registry.ts`.
 
-That's it. The home page reads from the registry, and the player uses the `ExerciseDefinition` to render the config panel and generate AlphaTex. **No changes to player or routing should be needed.**
+That's it. The home page reads from the registry, and the player + config panel are entirely driven by `ExerciseDefinition`. **No changes to player, panel, routing, or URL state should be needed.**
 
-## Type Definitions
+### Cross-field constraints, dynamic ranges, actions
+
+`ExerciseDefinition` exposes three optional hooks for exercises whose fields interact:
+
+- **`normalizeConfig(config)`** — runs after URL hydration and after every UI update. Use it for "end ≥ start" type invariants. The pyramid uses this so URL-injected `?start=5&end=2` gets coerced sanely.
+- **`getFieldConstraints(fieldKey, config)`** — returns dynamic `{ min, max }` for a field given the current config. Lets one field's allowed range depend on another's value (e.g. `end.min` tracks current `start`).
+- **`handleAction(actionKey, config)`** — handles clicks on `action`-typed fields. Returns the partial-config update to apply (or `null`). The pyramid's Randomize / Pyramid toggle is implemented here.
+- **`getActionLabel(actionKey, config)`** — dynamic label for an action (e.g. flipping between "Randomize" and "Pyramid").
+
+Reach for these only when needed; most exercises won't.
+
+## Type Definitions (canonical — see `src/exercises/types.ts`)
 
 ```typescript
-// src/exercises/types.ts
-
 export type ConfigFieldType = 'number' | 'range' | 'boolean' | 'select' | 'action';
 
-export interface SelectOption {
-  value: string;
-  label: string;
-}
+export interface SelectOption { value: string; label: string; }
 
 export interface ConfigField {
-  key: string;                   // e.g. 'bpm', matches key in defaultConfig
-  label: string;                 // user-visible label
+  key: string;
+  label: string;
   type: ConfigFieldType;
   default: unknown;
-  min?: number;                  // for number/range
-  max?: number;
-  step?: number;
-  options?: SelectOption[];      // for select
-  enabled: boolean;              // false => visible but disabled in UI ("Coming soon")
-  description?: string;          // tooltip / helper text
-  group?: string;                // optional grouping in UI (e.g., 'Pattern', 'Tempo', 'Timer')
+  min?: number; max?: number; step?: number;
+  options?: SelectOption[];        // for select
+  enabled: boolean;                // false → visible but disabled
+  description?: string;            // tooltip / helper
+  group?: string;                  // 'Tempo' | 'Pattern' | 'Timer' | 'Playback' | …
+  hidden?: boolean;                // not rendered, but still URL-roundtrips
 }
 
 export type ExerciseConfig = Record<string, unknown>;
 
+export interface FieldConstraints { min?: number; max?: number; }
+
 export interface ExerciseDefinition {
-  id: string;                    // url slug, kebab-case
+  id: string;                      // url slug, kebab-case
   name: string;
   description: string;
   difficulty?: 'beginner' | 'intermediate' | 'advanced';
   configFields: ConfigField[];
   defaultConfig: ExerciseConfig;
   generateAlphaTex: (config: ExerciseConfig) => string;
+  normalizeConfig?: (config: ExerciseConfig) => ExerciseConfig;
+  getFieldConstraints?: (fieldKey: string, config: ExerciseConfig) => FieldConstraints | undefined;
+  handleAction?: (actionKey: string, config: ExerciseConfig) => Partial<ExerciseConfig> | null;
+  getActionLabel?: (actionKey: string, config: ExerciseConfig) => string | undefined;
 }
 ```
 
-```typescript
-// src/exercises/registry.ts
-import { doubleBassPyramid } from './double-bass-pyramid';
-import type { ExerciseDefinition } from './types';
+## Subdivision-to-AlphaTex Conventions (`percussion.ts`)
 
-export const exercises: ExerciseDefinition[] = [
-  doubleBassPyramid,
-];
+When N kicks per beat:
 
-export function getExercise(id: string): ExerciseDefinition | undefined {
-  return exercises.find(e => e.id === id);
-}
-```
+| N | Notation | alphaTex `duration` | Tuplet (`{tu N}`)? |
+|---|---|---|---|
+| 1 | quarter notes        |  4 | no  |
+| 2 | eighth notes         |  8 | no  |
+| 3 | eighth-note triplets |  8 | yes |
+| 4 | sixteenth notes      | 16 | no  |
+| 5 | sixteenth quintuplets| 16 | yes |
+| 6 | sixteenth sextuplets | 16 | yes |
+| 7 | sixteenth septuplets | 16 | yes |
+| 8 | thirty-second notes  | 32 | no  |
 
-## Double Bass Pyramid Specification
+`baseDuration(n)` returns the duration; membership in `TUPLET_SUBDIVISIONS` (`{3,5,6,7}`) tells you whether to wrap in `{tu N}`.
 
-### Musical Structure
+**Foot alternation** uses two MIDI slots:
+- `KICK_RIGHT = 36` (Bass Drum 1)
+- `KICK_LEFT  = 35` (Acoustic Bass Drum)
 
-Time signature: **4/4**
+So `R / L` strokes render as different note-heads in alphaTab and the user gets a visual + aural cue for which foot to use.
 
-Each bar contains three simultaneous voices that must play together:
+**alphaTex chord ordering**: MIDI numbers in `(...)`-chords **must be ascending** — alphaTab rejects descending percussion chords with "Wrong note kind 'Fretted'". `buildNote()` does not re-sort, so callers are responsible.
 
-- **Hi-hat**: closed hi-hat on every quarter beat (4 hits per bar, always)
-- **Snare**: on beats 2 and 4 (2 hits per bar, always)
-- **Kick (double bass)**: N evenly-spaced hits across the bar, where N varies bar-by-bar
+## Theming
 
-For the default 1→8 pyramid, kick subdivision counts go:
+- Tailwind config: `darkMode: 'class'`. The `<html>` element gets `class="dark"` toggled by the `useTheme` hook + `<ThemeToggle>`.
+- `index.html` has a small bootstrap script that reads the saved theme from `localStorage` *before* React mounts so there's no flash-of-wrong-theme.
+- Native form controls (slider, checkbox) are themed via the CSS `accent-color` property — set on the field components themselves, not via custom shadow DOM.
+- `<ThemeToggle>` is rendered **only on the home page**. The exercise page intentionally does not let you switch themes mid-session because alphaTab caches SVG glyphs in a way that makes mid-session re-themes unreliable. Theme is captured at `<ExercisePlayer>` mount and held until unmount.
 
-```
-Bar:   1  2  3  4  5  6  7  8  9  10 11 12 13 14 15
-Kicks: 1  2  3  4  5  6  7  8  7  6  5  4  3  2  1
-```
+## Performance / Bundle Splitting
 
-(That's "kicks per beat" × 4 beats per bar. So bar 1 has 1 kick per beat = 4 kicks total in the bar; bar 8 has 8 kicks per beat = 32 kicks total.)
+`ExercisePage` is `React.lazy()`'d in `src/App.tsx`. The home page ships React + router + our UI (~78 KB gz). alphaTab (~280 KB gz of JS plus the worker / worklet / soundfont) only loads when a user actually opens an exercise.
 
-> **Note on interpretation.** "1 to 8" can mean either (a) N kicks per *beat* — bar 1 = 4 kicks total, bar 8 = 32 kicks total / 32nd notes — or (b) N kicks per *bar* — bar 1 = 1 kick total, bar 8 = 8 kicks total. Use **(a) kicks per beat**. This is the standard "rhythmic scale" pyramid taught by Drumeo and Aquiles Priester. The config can be extended later to expose (b) if needed.
-
-### Subdivision Implementation Notes
-
-When N kicks per beat is:
-
-| N | Notation | Notes |
-|---|---|---|
-| 1 | quarter notes | straight |
-| 2 | eighth notes | straight |
-| 3 | eighth-note triplets | tuplet (3 in space of 2) |
-| 4 | sixteenth notes | straight |
-| 5 | sixteenth quintuplets | tuplet (5 in space of 4) |
-| 6 | sixteenth sextuplets | tuplet (6 in space of 4) |
-| 7 | sixteenth septuplets | tuplet (7 in space of 4) |
-| 8 | thirty-second notes | straight |
-
-### Config Schema
-
-```typescript
-// src/exercises/double-bass-pyramid/config.ts
-import type { ConfigField, ExerciseConfig } from '../types';
-
-export const configFields: ConfigField[] = [
-  {
-    key: 'bpm',
-    label: 'BPM',
-    type: 'number',
-    default: 60,
-    min: 30,
-    max: 300,
-    step: 1,
-    enabled: true,
-    group: 'Tempo',
-  },
-  {
-    key: 'start',
-    label: 'Pyramid start',
-    type: 'number',
-    default: 1,
-    min: 1,
-    max: 8,
-    step: 1,
-    enabled: false,
-    group: 'Pattern',
-    description: 'Lowest subdivision count (kicks per beat)',
-  },
-  {
-    key: 'end',
-    label: 'Pyramid end',
-    type: 'number',
-    default: 8,
-    min: 1,
-    max: 8,
-    step: 1,
-    enabled: false,
-    group: 'Pattern',
-    description: 'Highest subdivision count (kicks per beat)',
-  },
-  {
-    key: 'randomize',
-    label: 'Randomize order',
-    type: 'action',
-    default: false,
-    enabled: false,
-    group: 'Pattern',
-    description: 'Shuffle the subdivision sequence',
-  },
-  {
-    key: 'timerSeconds',
-    label: 'Timer',
-    type: 'number',
-    default: 900,
-    min: 60,
-    max: 3600,
-    step: 60,
-    enabled: false,
-    group: 'Timer',
-    description: 'Total practice time in seconds',
-  },
-  {
-    key: 'loop',
-    label: 'Loop until timer ends',
-    type: 'boolean',
-    default: true,
-    enabled: false,
-    group: 'Timer',
-  },
-];
-
-export const defaultConfig: ExerciseConfig = Object.fromEntries(
-  configFields.map(f => [f.key, f.default])
-);
-```
-
-### Generator Spec
-
-```typescript
-// src/exercises/double-bass-pyramid/generator.ts
-
-export function generateAlphaTex(config: ExerciseConfig): string {
-  const { bpm, start, end } = config as { bpm: number; start: number; end: number };
-
-  // 1. Build the subdivision sequence: ascending then descending
-  //    e.g., start=1, end=8 => [1,2,3,4,5,6,7,8,7,6,5,4,3,2,1]
-  // 2. For each subdivision count N, generate one bar of AlphaTex with:
-  //    - Voice 1: hi-hat on every quarter, snare on 2 and 4
-  //    - Voice 2: N evenly-spaced kicks across the bar (use tuplets when N is not a power of 2)
-  // 3. Concatenate all bars into a single AlphaTex score.
-  // 4. Return the full AlphaTex string.
-
-  // Pseudocode:
-  // const sequence = [...range(start, end), ...range(end-1, start, -1)];
-  // const bars = sequence.map(n => buildBar(n));
-  // return [`\\title "Double Bass Pyramid"`, `\\tempo ${bpm}`, `.`, ...buildTrack(bars)].join('\n');
-}
-```
-
-> **Implementation note for the agent**: AlphaTex syntax for drum tracks needs to be verified against the alphaTab docs and examples — specifically:
-> - How to declare a percussion track (`\track "Drums" \instrument percussion` or similar)
-> - Named drum articulations (e.g., `KickHit`, `SnareHit`, `HiHat`) vs. MIDI numbers (e.g., `36` kick, `38` snare, `42` closed hi-hat)
-> - Multi-voice syntax for simultaneous independent rhythms (the hi-hat/snare quarter-note voice and the kick subdivision voice). AlphaTab supports multiple voices per track.
-> - Tuplet syntax (likely `note.duration { tu N }` over a group, but verify)
-> - Whether `\ts 4 4` is needed per bar or just once
->
-> **Recommended workflow:**
-> 1. Manually build a 1-bar AlphaTex sample for N=1 (the simplest case) and load it via `api.tex(...)` to confirm the syntax renders and plays.
-> 2. Then N=2 (eighth notes), then N=3 (triplet — first tuplet test).
-> 3. Then build the generator and verify each bar renders correctly.
-> 4. Then concatenate the full pyramid and visually + aurally check it.
-
-### Validation Checklist for Generated Output
-
-When the generator is wired up, the playable score must satisfy:
-
-- [ ] 15 bars total for default 1–8 pyramid
-- [ ] Hi-hat fires on all 4 quarter beats of every bar
-- [ ] Snare fires on beats 2 and 4 of every bar
-- [ ] Kick subdivision count per bar matches the sequence `[1,2,3,4,5,6,7,8,7,6,5,4,3,2,1]`
-- [ ] Each kick is evenly spaced across its beat (tuplets where needed for 3, 5, 6, 7)
-- [ ] Tempo respects the BPM config
-- [ ] Score plays back without timing drift over a full loop
-- [ ] alphaTab cursor follows playback bar-by-bar
-
-## UI / UX Requirements
-
-### Home page (`/`)
-
-- Page title: "Drum Exercises"
-- Brief subtitle/tagline (one line)
-- A simple grid (or list) of `ExerciseCard` components, one per exercise in the registry
-- Each card shows: name, short description, difficulty badge
-- Clicking the card navigates to `/exercises/:id`
-
-### Exercise page (`/exercises/:id`)
-
-Layout (rough):
-
-```
-┌────────────────────────────────────────────────────────────┐
-│  ← Back to exercises                                        │
-│  Double Bass Pyramid                                        │
-│  <one-line description>                                     │
-├──────────────────────────────────────────┬─────────────────┤
-│                                          │  Tempo          │
-│                                          │  ┌──────────┐   │
-│   [alphaTab notation, scrolling          │  │ BPM 60   │   │
-│    horizontally, with playback cursor]   │  └──────────┘   │
-│                                          │                 │
-│                                          │  Pattern        │
-│                                          │  Start: 1 🔒    │
-│                                          │  End:   8 🔒    │
-│                                          │  [Randomize] 🔒 │
-│                                          │                 │
-│                                          │  Timer          │
-│                                          │  15:00     🔒   │
-│                                          │  Loop  ✓   🔒   │
-├──────────────────────────────────────────┴─────────────────┤
-│      [⏮ Stop]   [▶ Play / ⏸ Pause]                 14:23   │
-└────────────────────────────────────────────────────────────┘
-```
-
-- The alphaTab container should have a fixed height and horizontal auto-scroll set as the `scrollElement` so the cursor stays visible during playback.
-- Disabled config fields render with `opacity-50`, `cursor-not-allowed`, `disabled` attribute, and a small "Coming soon" badge or tooltip.
-- BPM input updates alphaTab tempo in real-time without restarting playback (use the API; verify whether `api.changeTempo()` / setting `score.tempo` / re-rendering is the cleanest path).
-- Timer:
-  - Displays as `MM:SS`, counts down from `timerSeconds` once Play is pressed
-  - Pauses when playback pauses, resumes when playback resumes
-  - When it hits 0, calls `api.stop()` and resets to `timerSeconds`
-- Playback controls:
-  - Play/Pause toggles
-  - Stop returns cursor to bar 1 and resets the timer to its starting value
-- Loop behavior: alphaTab fires `playerFinished` (or equivalent) when the score ends; the player component listens for this and, if the timer hasn't expired, calls `api.playPause()` again to restart from the top. Alternatively use alphaTab's built-in looping if it works for the whole score.
-
-### Error / loading states
-
-- While alphaTab is loading the SoundFont, show a small spinner and disable Play.
-- If exercise id is not found in registry, show a 404-style "Exercise not found" message with a link back to `/`.
+Don't undo this — first-paint on `/` is the conversion-funnel page.
 
 ## alphaTab Integration Notes
 
-- Install: `npm install @coderline/alphatab`
-- Create the API instance once per mount, dispose on unmount:
-  ```typescript
-  const api = new alphaTab.AlphaTabApi(containerEl, {
-    player: {
-      enablePlayer: true,
-      soundFont: 'https://cdn.jsdelivr.net/npm/@coderline/alphatab@latest/dist/soundfont/sonivox.sf2',
-      scrollElement: scrollContainerEl,
-    },
-  });
-  ```
-  (Verify additional settings like cursor/interaction toggles against current alphaTab docs — the defaults usually work.)
-- Load notation: `api.tex(alphaTexString)`
-- Controls: `api.playPause()`, `api.stop()`
-- Events to subscribe to: `playerReady`, `playerStateChanged`, `playerFinished` (verify exact names against current API), `playerPositionChanged`
-- Tempo updates: prefer the live API method if available; otherwise the cleanest fallback is to regenerate AlphaTex with the new tempo and reload, but that interrupts playback — only acceptable while paused. Verify the current alphaTab API for live tempo changes before settling on an approach.
-- Cleanup: call `api.destroy()` in the React component's cleanup function
+- API construction is centralised in `src/lib/alphatab-setup.ts` (`buildSettings(scrollEl, theme)`). It points the soundfont, worker, and worklet to `/public/alphatab/` + `/public/soundfont/` so they're served from the same origin (avoids cross-origin worker headaches).
+- `<ExercisePlayer>` constructs the API once per `exercise` change, sets `api.isLooping = true`, and pushes config updates via:
+  - `api.tex(generator.generateAlphaTex(config))` whenever the config or exercise changes
+  - `api.metronomeVolume = metronome ? 0.5 : 0`
+  - `api.countInVolume   = countIn   ? 0.5 : 0`
+- Events: `playerReady`, `playerStateChanged`. Disposal: `api.destroy()` in the cleanup function.
+- **Timer reset gotcha**: `useCountdown.onZero` runs from inside a `setRemaining` updater. Calling `resetTimer()` directly from there is unreliable due to React's update batching. Instead: `onZero` calls `api.stop()`, and a separate `useEffect` watches `(remaining === 0 && !playing && totalSeconds > 0)` and resets the timer there.
 
-## Package Manager
+## UI / UX
 
-**Use `pnpm`** for all install/run/script commands. Do not use `npm` or `yarn`. Commit `pnpm-lock.yaml`.
+### Home page (`/`)
 
-## Setup Commands
+- Title, tagline, theme toggle (top-right), grid of `ExerciseCard`s (one per registry entry: name, short description, difficulty badge), footer.
+
+### Exercise page (`/exercises/:id`)
+
+- Top-right: `<ShareButton>` (copies `window.location.href`).
+- Top: "← Back to exercises", title, description.
+- `<ConfigPanel>` (dynamic from `configFields`, grouped).
+- `<ExercisePlayer>` (alphaTab notation + Play/Pause/Stop + timer).
+- `<Footer>` at the bottom.
+- 404: "Exercise not found" with a link back to `/` if the slug isn't in the registry.
+
+### Disabled / coming-soon fields
+
+`enabled: false` ConfigFields render greyed-out with a "Coming soon" tooltip. They still hydrate from the URL (so we can pre-share configurations whose UI isn't built yet).
+
+## Setup
 
 ```bash
-pnpm create vite@latest drumforge --template react-ts
-cd drumforge
 pnpm install
-pnpm add @coderline/alphatab react-router-dom
-pnpm add -D tailwindcss postcss autoprefixer
-pnpm exec tailwindcss init -p
+pnpm dev          # http://localhost:5173
+pnpm build        # production bundle into dist/
+pnpm preview      # serve dist/
+pnpm lint
 ```
 
-Configure `tailwind.config.js` `content` to `['./index.html', './src/**/*.{ts,tsx}']`. Add Tailwind directives to `src/index.css`.
+## License
 
-## Recommended Build Order
+MIT. `Copyright © 2026 Narek Ghevandiani.` See `LICENSE`.
 
-1. **Scaffold**: Vite + React + TS + Tailwind + Router. Confirm dev server runs.
-2. **Types & registry**: Create `src/exercises/types.ts` and an empty `registry.ts`.
-3. **Exercise stub**: Create the `double-bass-pyramid` folder with `metadata.ts`, `config.ts`, and a stub `generator.ts` that returns hardcoded one-bar AlphaTex (just to validate alphaTab end-to-end).
-4. **Routes & pages**: Wire up `HomePage` (lists exercises from the registry) and `ExercisePage` (loads exercise by id, shows placeholder player).
-5. **alphaTab integration**: Build `ExercisePlayer.tsx` that hosts alphaTab, loads AlphaTex from the exercise's generator, renders, and supports basic Play/Pause/Stop. Verify cursor + audio work with the stub.
-6. **ConfigPanel**: Render the exercise's `configFields` dynamically. Wire up the BPM field (only enabled one). Disabled fields render greyed-out.
-7. **Real generator**: Implement the pyramid generator. Test incrementally: N=1 first, then N=2, then a 3-bar test (1,2,1), then full pyramid. Use the validation checklist above.
-8. **Timer**: Build `Timer.tsx` and the `useCountdown` hook. Hook timer state to play/pause/stop and to alphaTab events. Implement looping logic.
-9. **Polish**: Loading state, "Coming soon" badges, basic responsive layout, README.
+The `@coderline/alphatab` dependency is MPL-2.0 — compatible with MIT for our use because we consume it via npm without modifying its source files, so its file-level copyleft does not propagate to Drumforge's own code.
 
-Each step should be independently runnable and testable.
+## Code Style
+
+- TypeScript strict on (`"strict": true`); no `.js`/`.jsx` in `src/`.
+- Functional components with hooks; no class components.
+- Pure functions for generators (no side effects, easy to unit-test).
+- Prefer named exports.
+- Keep components small (< 150 lines); extract sub-components.
+- Tailwind utility classes preferred over custom CSS; only fall back to a `.css` file when utilities are insufficient.
 
 ## Resources
 
 - alphaTab homepage: https://alphatab.net/
-- alphaTab docs (start here): https://alphatab.net/docs/introduction
+- alphaTab docs: https://alphatab.net/docs/introduction
 - AlphaTex syntax: https://alphatab.net/docs/alphatex/introduction
 - Player tutorial: https://alphatab.net/docs/tutorial-web/player
 - alphaTab GitHub: https://github.com/CoderLine/alphaTab
-- npm package: https://www.npmjs.com/package/@coderline/alphatab
-- Drumeo lesson explaining the pyramid (musical reference): https://www.drumeo.com/beat/the-double-bass-drum-pyramid/
-
-## License
-
-**MIT.** When creating the GitHub repository, check "Add a license" and pick the MIT template — GitHub fills in the year and copyright holder automatically. Add a one-line license note to the bottom of the `README.md`:
-
-> Copyright © 2026 [Your Name]. Released under the [MIT License](./LICENSE).
-
-The `@coderline/alphatab` dependency is MPL-2.0, which is compatible with MIT for our purposes — we consume alphaTab via npm without modifying its source files, so its file-level copyleft does not propagate to Drumforge's own code.
-
-## Code Style
-
-- TypeScript strict mode on (`"strict": true` in `tsconfig.json`); no `.js`/`.jsx` files in `src/`
-- Functional components with hooks; no class components
-- Pure functions for generators (no side effects, easy to unit-test)
-- Prefer named exports over default exports
-- Co-locate types with the code that uses them when there's no shared consumer
-- Keep components small (< 150 lines); extract sub-components when needed
-- Tailwind utility classes preferred over custom CSS; only fall back to a `.css` file when utilities are insufficient
+- Drumeo lesson on the pyramid (musical reference): https://www.drumeo.com/beat/the-double-bass-drum-pyramid/
 
 ## Open Questions / Decisions Deferred
 
-These are intentionally not decided yet. Don't block on them — pick a reasonable default and note it in the README so future iterations can revisit:
-
-- Whether to use alphaTab's built-in score-looping API or implement looping manually via `playerFinished` events
-- How to update tempo live without restarting playback (verify what the current API supports)
-- Whether the timer should pause automatically when the browser tab is backgrounded
-- Whether to show a count-in click before playback starts (probably yes, but not in MVP)
-- SoundFont quality (Sonivox is bundled and fine; FluidR3 GM sounds noticeably better but is larger)
+- Whether the timer should pause automatically when the browser tab is backgrounded.
+- SoundFont quality — currently FluidR3 (in `public/soundfont/`); Sonivox is smaller but noticeably worse.
+- Whether to expose pattern-randomization with reproducible seeds (`hidden: true` ConfigField) for future exercises.
