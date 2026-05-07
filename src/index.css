@@ -12,3 +12,13 @@ body {
   margin: 0;
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
 }
+
+/* alphaTab playback cursors — make the bar highlight and beat line visible */
+.at-cursor-bar {
+  background: rgba(59, 130, 246, 0.12); /* blue-500 @ 12% */
+}
+
+.at-cursor-beat {
+  background: rgb(59, 130, 246); /* blue-500 */
+  width: 2px;
+}

@@ -66,11 +66,11 @@ export function generateAlphaTex(config: ExerciseConfig): string {
   const sequence = pyramidSequence(start, end);
   const bars = sequence.map(buildBar);
   return [
-    '\\title "Double Bass Pyramid"',
     `\\tempo ${bpm}`,
     '.',
     '\\track "Drums"',
     '\\instrument percussion',
+    '\\clef neutral',
     '\\ts 4 4',
     bars.join('\n'),
   ].join('\n');
