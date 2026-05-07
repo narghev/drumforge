@@ -6,9 +6,12 @@ interface Props {
   onChange: (value: unknown) => void;
   effectiveMin?: number;
   effectiveMax?: number;
+  /** For action fields: optional label override (e.g. toggling
+   * "Randomize" ⇄ "Pyramid" based on current state). */
+  actionLabel?: string;
 }
 
-export function ConfigField({ field, value, onChange, effectiveMin, effectiveMax }: Props) {
+export function ConfigField({ field, value, onChange, effectiveMin, effectiveMax, actionLabel }: Props) {
   const baseInput =
     'w-full rounded-md border border-gray-300 bg-white px-2 py-1.5 text-sm text-gray-900 transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-400';
 
@@ -98,7 +101,7 @@ export function ConfigField({ field, value, onChange, effectiveMin, effectiveMax
         title={field.description}
         className="self-end rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
       >
-        {field.label}
+        {actionLabel ?? field.label}
         {!field.enabled && <span className="ml-1 text-xs text-gray-400">(soon)</span>}
       </button>
     );

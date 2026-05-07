@@ -10,6 +10,7 @@ interface Props {
 function groupFields(fields: ConfigFieldType[]): Map<string, ConfigFieldType[]> {
   const groups = new Map<string, ConfigFieldType[]>();
   for (const field of fields) {
+    if (field.hidden) continue;
     const key = field.group ?? 'Settings';
     if (!groups.has(key)) groups.set(key, []);
     groups.get(key)!.push(field);
@@ -39,6 +40,10 @@ export function ConfigPanel({ exercise, config, onChange }: Props) {
             <div className="flex flex-wrap items-end gap-3">
               {fields.map((field) => {
                 const constraints = exercise.getFieldConstraints?.(field.key, config);
+                const dynamicLabel =
+                  field.type === 'action'
+                    ? exercise.getActionLabel?.(field.key, config)
+                    : undefined;
                 return (
                   <ConfigField
                     key={field.key}
@@ -46,7 +51,15 @@ export function ConfigPanel({ exercise, config, onChange }: Props) {
                     value={config[field.key]}
                     effectiveMin={constraints?.min}
                     effectiveMax={constraints?.max}
-                    onChange={(value) => onChange({ [field.key]: value })}
+                    actionLabel={dynamicLabel}
+                    onChange={(value) => {
+                      if (field.type === 'action' && value === true && exercise.handleAction) {
+                        const updates = exercise.handleAction(field.key, config);
+                        if (updates) onChange(updates);
+                        return;
+                      }
+                      onChange({ [field.key]: value });
+                    }}
                   />
                 );
               })}

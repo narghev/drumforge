@@ -1,3 +1,4 @@
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { getExercise } from '../exercises/registry';
 import { ExercisePlayer } from '../components/ExercisePlayer';
@@ -26,8 +27,27 @@ export function ExercisePage() {
   return <ExerciseView exercise={exercise} />;
 }
 
+function makeRandomSeed(): number {
+  return Math.floor(Math.random() * 2_147_483_646) + 1;
+}
+
 function ExerciseView({ exercise }: { exercise: ReturnType<typeof getExercise> & {} }) {
   const [config, setConfig] = useExerciseConfig(exercise);
+  const random = Boolean(config.random);
+
+  // The randomization seed lives only in component state — never in the URL.
+  // Each transition into random mode picks a fresh seed, so the URL is just
+  // an "is randomized" indicator (?random=true), not a reproducible pattern.
+  const [randomSeed, setRandomSeed] = useState(() => (random ? makeRandomSeed() : 0));
+
+  useEffect(() => {
+    setRandomSeed(random ? makeRandomSeed() : 0);
+  }, [random]);
+
+  const effectiveConfig = useMemo(
+    () => (random ? { ...config, seed: randomSeed } : config),
+    [config, random, randomSeed],
+  );
 
   return (
     <div className="mx-auto flex h-screen max-w-6xl flex-col gap-4 px-6 py-6">
@@ -40,7 +60,7 @@ function ExerciseView({ exercise }: { exercise: ReturnType<typeof getExercise> &
       </header>
       <ConfigPanel exercise={exercise} config={config} onChange={setConfig} />
       <div className="flex min-h-0 flex-1 flex-col">
-        <ExercisePlayer exercise={exercise} config={config} />
+        <ExercisePlayer exercise={exercise} config={effectiveConfig} />
       </div>
     </div>
   );

@@ -17,6 +17,10 @@ export interface ConfigField {
   enabled: boolean;
   description?: string;
   group?: string;
+  /** If true, the field is omitted from the rendered ConfigPanel but still
+   * round-trips through URL params. Used for state we want to persist in
+   * the URL without exposing a control (e.g. an RNG seed). */
+  hidden?: boolean;
 }
 
 export type ExerciseConfig = Record<string, unknown>;
@@ -47,4 +51,16 @@ export interface ExerciseDefinition {
    * the static field.min / field.max.
    */
   getFieldConstraints?: (fieldKey: string, config: ExerciseConfig) => FieldConstraints | undefined;
+  /**
+   * Handle a click on an `action`-typed field. Receives the action's key plus
+   * the current config; returns the partial-config update to apply (or null
+   * for "no-op"). Lets actions express "set seed = newRandom" or toggle modes
+   * without leaking exercise-specific logic into ConfigPanel.
+   */
+  handleAction?: (actionKey: string, config: ExerciseConfig) => Partial<ExerciseConfig> | null;
+  /**
+   * Optional dynamic label override for an action button. Useful when one
+   * button toggles between two states (e.g. "Randomize" ⇄ "Pyramid").
+   */
+  getActionLabel?: (actionKey: string, config: ExerciseConfig) => string | undefined;
 }

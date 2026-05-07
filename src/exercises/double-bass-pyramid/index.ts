@@ -31,6 +31,23 @@ function getFieldConstraints(
   return undefined;
 }
 
+function isRandomMode(config: ExerciseConfig): boolean {
+  return Boolean(config.random);
+}
+
+function handleAction(
+  actionKey: string,
+  config: ExerciseConfig,
+): Partial<ExerciseConfig> | null {
+  if (actionKey !== 'randomize') return null;
+  return { random: !isRandomMode(config) };
+}
+
+function getActionLabel(actionKey: string, config: ExerciseConfig): string | undefined {
+  if (actionKey !== 'randomize') return undefined;
+  return isRandomMode(config) ? 'Pyramid' : 'Randomize';
+}
+
 export const doubleBassPyramid: ExerciseDefinition = {
   ...metadata,
   configFields,
@@ -38,4 +55,6 @@ export const doubleBassPyramid: ExerciseDefinition = {
   generateAlphaTex,
   normalizeConfig,
   getFieldConstraints,
+  handleAction,
+  getActionLabel,
 };

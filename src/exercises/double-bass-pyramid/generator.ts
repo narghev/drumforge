@@ -35,6 +35,33 @@ function pyramidSequence(start: number, end: number): number[] {
   return [...up, ...down];
 }
 
+const RANDOM_SEQUENCE_LENGTH = 200;
+
+// Mulberry32 — small, fast, well-distributed seeded PRNG.
+// Same seed → same sequence, so URL with ?seed=N is reproducible/shareable.
+function mulberry32(seed: number): () => number {
+  let a = seed >>> 0;
+  return () => {
+    a = (a + 0x6d2b79f5) >>> 0;
+    let t = a;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function randomSequence(start: number, end: number, seed: number): number[] {
+  const lo = Math.min(start, end);
+  const hi = Math.max(start, end);
+  const span = hi - lo + 1;
+  const rng = mulberry32(seed);
+  const sequence: number[] = [];
+  for (let i = 0; i < RANDOM_SEQUENCE_LENGTH; i++) {
+    sequence.push(lo + Math.floor(rng() * span));
+  }
+  return sequence;
+}
+
 function buildNote(midiPitches: number[], duration: number, tuplet: number | null): string {
   const head = `(${midiPitches.join(' ')}).${duration}`;
   return tuplet ? `${head}{tu ${tuplet}}` : head;
@@ -62,8 +89,15 @@ function buildBar(subdivisions: number): string {
 }
 
 export function generateAlphaTex(config: ExerciseConfig): string {
-  const { bpm, start, end } = config as { bpm: number; start: number; end: number };
-  const sequence = pyramidSequence(start, end);
+  const { bpm, start, end, seed } = config as {
+    bpm: number;
+    start: number;
+    end: number;
+    seed?: number;
+  };
+  const seedValue = Number(seed) || 0;
+  const sequence =
+    seedValue > 0 ? randomSequence(start, end, seedValue) : pyramidSequence(start, end);
   const bars = sequence.map(buildBar);
   return [
     `\\tempo ${bpm}`,
