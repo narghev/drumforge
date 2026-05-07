@@ -17,13 +17,15 @@ export function ExercisePlayer({ exercise, config }: Props) {
   const [ready, setReady] = useState(false);
   const [playing, setPlaying] = useState(false);
 
-  const timerSeconds = Number(config.timerSeconds) || 900;
+  const timerMinutes = Math.max(0, Number(config.timerMinutes) || 0);
+  const timerSecondsField = Math.max(0, Number(config.timerSeconds) || 0);
+  const totalSeconds = timerMinutes * 60 + timerSecondsField;
   const loop = Boolean(config.loop);
 
   const { remaining, reset: resetTimer } = useCountdown({
-    totalSeconds: timerSeconds,
-    running: playing,
-    onZero: () => apiRef.current?.stop(),
+    totalSeconds,
+    running: playing && totalSeconds > 0,
+    onZero: totalSeconds > 0 ? () => apiRef.current?.stop() : undefined,
   });
 
   useEffect(() => {
@@ -58,7 +60,8 @@ export function ExercisePlayer({ exercise, config }: Props) {
     const api = apiRef.current;
     if (!api) return;
     const onFinished = () => {
-      if (loop && remaining > 0) {
+      const timerExpired = totalSeconds > 0 && remaining === 0;
+      if (loop && !timerExpired) {
         api.playPause();
       }
     };
@@ -66,7 +69,7 @@ export function ExercisePlayer({ exercise, config }: Props) {
     return () => {
       api.playerFinished.off(onFinished);
     };
-  }, [loop, remaining]);
+  }, [loop, remaining, totalSeconds]);
 
   const handlePlayPause = () => {
     apiRef.current?.playPause();
@@ -105,7 +108,7 @@ export function ExercisePlayer({ exercise, config }: Props) {
         </button>
         {!ready && <span className="text-sm text-gray-500">Loading soundfont…</span>}
         <div className="ml-auto">
-          <Timer remainingSeconds={remaining} totalSeconds={timerSeconds} />
+          <Timer remainingSeconds={remaining} totalSeconds={totalSeconds} />
         </div>
       </div>
     </div>
