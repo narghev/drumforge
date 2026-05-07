@@ -20,7 +20,6 @@ export function ExercisePlayer({ exercise, config }: Props) {
   const timerMinutes = Math.max(0, Number(config.timerMinutes) || 0);
   const timerSecondsField = Math.max(0, Number(config.timerSeconds) || 0);
   const totalSeconds = timerMinutes * 60 + timerSecondsField;
-  const loop = Boolean(config.loop);
 
   const { remaining, reset: resetTimer } = useCountdown({
     totalSeconds,
@@ -61,7 +60,7 @@ export function ExercisePlayer({ exercise, config }: Props) {
     if (!api) return;
     const onFinished = () => {
       const timerExpired = totalSeconds > 0 && remaining === 0;
-      if (loop && !timerExpired) {
+      if (!timerExpired) {
         api.playPause();
       }
     };
@@ -69,7 +68,7 @@ export function ExercisePlayer({ exercise, config }: Props) {
     return () => {
       api.playerFinished.off(onFinished);
     };
-  }, [loop, remaining, totalSeconds]);
+  }, [remaining, totalSeconds]);
 
   const handlePlayPause = () => {
     apiRef.current?.playPause();

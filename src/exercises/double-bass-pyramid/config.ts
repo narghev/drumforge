@@ -67,14 +67,6 @@ export const configFields: ConfigField[] = [
     enabled: true,
     group: 'Timer',
   },
-  {
-    key: 'loop',
-    label: 'Loop until timer ends',
-    type: 'boolean',
-    default: true,
-    enabled: false,
-    group: 'Timer',
-  },
 ];
 
 export const defaultConfig: ExerciseConfig = Object.fromEntries(
