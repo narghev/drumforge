@@ -1,0 +1,72 @@
+import type { ConfigField, ExerciseConfig } from '../types';
+
+export const configFields: ConfigField[] = [
+  {
+    key: 'bpm',
+    label: 'BPM',
+    type: 'number',
+    default: 60,
+    min: 30,
+    max: 300,
+    step: 1,
+    enabled: true,
+    group: 'Tempo',
+  },
+  {
+    key: 'start',
+    label: 'Pyramid start',
+    type: 'number',
+    default: 1,
+    min: 1,
+    max: 8,
+    step: 1,
+    enabled: false,
+    group: 'Pattern',
+    description: 'Lowest subdivision count (kicks per beat)',
+  },
+  {
+    key: 'end',
+    label: 'Pyramid end',
+    type: 'number',
+    default: 8,
+    min: 1,
+    max: 8,
+    step: 1,
+    enabled: false,
+    group: 'Pattern',
+    description: 'Highest subdivision count (kicks per beat)',
+  },
+  {
+    key: 'randomize',
+    label: 'Randomize order',
+    type: 'action',
+    default: false,
+    enabled: false,
+    group: 'Pattern',
+    description: 'Shuffle the subdivision sequence',
+  },
+  {
+    key: 'timerSeconds',
+    label: 'Timer',
+    type: 'number',
+    default: 900,
+    min: 60,
+    max: 3600,
+    step: 60,
+    enabled: false,
+    group: 'Timer',
+    description: 'Total practice time in seconds',
+  },
+  {
+    key: 'loop',
+    label: 'Loop until timer ends',
+    type: 'boolean',
+    default: true,
+    enabled: false,
+    group: 'Timer',
+  },
+];
+
+export const defaultConfig: ExerciseConfig = Object.fromEntries(
+  configFields.map((f) => [f.key, f.default]),
+);
