@@ -2,9 +2,7 @@
 
 A free, browser-based interactive drum exercise website with synchronized scrolling notation, configurable BPM, randomization, metronome, count-in, and a built-in practice timer.
 
-🌐 **[drumforge.app](https://drumforge.app)**
-
-The first exercise is **Double Bass Pyramid** — kicks-per-beat ramps from one subdivision up to another and back, with alternating right/left foot patterns over a steady hi-hat / backbeat snare.
+🥁 **[drumforge.app](https://drumforge.app)**
 
 ## Exercises
 - **Double Bass Pyramid** (1 to 8 kicks per beat, up and down)
