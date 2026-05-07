@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import { getExercise } from '../exercises/registry';
 import { ExercisePlayer } from '../components/ExercisePlayer';
 import { ConfigPanel } from '../components/ConfigPanel';
+import { ShareButton } from '../components/ShareButton';
 import { useExerciseConfig } from '../lib/useExerciseConfig';
 import { useDocumentTitle } from '../lib/useDocumentTitle';
 
@@ -54,6 +55,9 @@ function ExerciseView({ exercise }: { exercise: ReturnType<typeof getExercise> &
 
   return (
     <div className="flex h-screen w-full flex-col gap-4 px-6 py-6">
+      <div className="fixed right-4 top-4 z-50">
+        <ShareButton />
+      </div>
       <Link to="/" className="text-sm text-accent-600 hover:text-accent-700 hover:underline dark:text-accent-400 dark:hover:text-accent-300">
         ← Back to exercises
       </Link>
