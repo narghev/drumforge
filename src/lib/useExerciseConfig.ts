@@ -52,7 +52,7 @@ function buildConfig(
     }
     config[field.key] = coerced;
   }
-  return config;
+  return exercise.normalizeConfig ? exercise.normalizeConfig(config) : config;
 }
 
 export function useExerciseConfig(
@@ -69,10 +69,14 @@ export function useExerciseConfig(
     (updates: Partial<ExerciseConfig>) => {
       setSearchParams(
         (prev) => {
+          const current = buildConfig(exercise, prev);
+          const merged: ExerciseConfig = { ...current, ...updates };
+          const normalized = exercise.normalizeConfig
+            ? exercise.normalizeConfig(merged)
+            : merged;
           const next = new URLSearchParams(prev);
           for (const field of exercise.configFields) {
-            if (!(field.key in updates)) continue;
-            const value = updates[field.key];
+            const value = normalized[field.key];
             const isDefault =
               JSON.stringify(value) === JSON.stringify(field.default);
             const serialized = isDefault ? undefined : serialize(field, value);

@@ -25,14 +25,19 @@ export function ConfigPanel({ exercise, config, onChange }: Props) {
       {Array.from(groups.entries()).map(([groupName, fields]) => (
         <section key={groupName} className="flex flex-col gap-3">
           <h2 className="text-sm font-semibold text-gray-900">{groupName}</h2>
-          {fields.map((field) => (
-            <ConfigField
-              key={field.key}
-              field={field}
-              value={config[field.key]}
-              onChange={(value) => onChange({ [field.key]: value })}
-            />
-          ))}
+          {fields.map((field) => {
+            const constraints = exercise.getFieldConstraints?.(field.key, config);
+            return (
+              <ConfigField
+                key={field.key}
+                field={field}
+                value={config[field.key]}
+                effectiveMin={constraints?.min}
+                effectiveMax={constraints?.max}
+                onChange={(value) => onChange({ [field.key]: value })}
+              />
+            );
+          })}
         </section>
       ))}
     </aside>
