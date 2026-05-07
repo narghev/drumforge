@@ -80,3 +80,13 @@ export const countInField: ConfigField = {
   group: 'Playback',
   description: 'Play one bar of clicks before playback starts.',
 };
+
+export const moneyBeatField: ConfigField = {
+  key: 'moneyBeat',
+  label: 'Money beat',
+  type: 'boolean',
+  default: true,
+  enabled: true,
+  group: 'Pattern',
+  description: 'Layer hi-hat on every beat and snare on beats 2 and 4 over the footwork.',
+};

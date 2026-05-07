@@ -1,35 +1,13 @@
 import type { ExerciseConfig } from '../types';
-
-// Two GM percussion slots so we can alternate feet on the kick drum:
-//   - Bass Drum 1 (MIDI 36) → right foot ("R")
-//   - Acoustic Bass Drum (MIDI 35) → left foot ("L")
-// Even global subdivisions in the bar use R; odd use L → continuous
-// R L R L R L … pattern across the whole bar.
-const KICK_RIGHT = 36;
-const KICK_LEFT = 35;
-const SNARE = 38;
-const HIHAT_CLOSED = 42;
-
-const TUPLET_SUBDIVISIONS = new Set([3, 5, 6, 7]);
-
-function baseDuration(n: number): number {
-  switch (n) {
-    case 1:
-      return 4;
-    case 2:
-    case 3:
-      return 8;
-    case 4:
-    case 5:
-    case 6:
-    case 7:
-      return 16;
-    case 8:
-      return 32;
-    default:
-      throw new Error(`Unsupported subdivision count: ${n}. Expected 1-8.`);
-  }
-}
+import {
+  HIHAT_CLOSED,
+  KICK_LEFT,
+  KICK_RIGHT,
+  SNARE,
+  TUPLET_SUBDIVISIONS,
+  baseDuration,
+  buildNote,
+} from '../percussion';
 
 function pyramidSequence(start: number, end: number): number[] {
   const lo = Math.min(start, end);
@@ -44,7 +22,7 @@ function pyramidSequence(start: number, end: number): number[] {
 const RANDOM_SEQUENCE_LENGTH = 200;
 
 // Mulberry32 — small, fast, well-distributed seeded PRNG.
-// Same seed → same sequence, so URL with ?seed=N is reproducible/shareable.
+// Same seed → same sequence, so a config + seed combination is reproducible.
 function mulberry32(seed: number): () => number {
   let a = seed >>> 0;
   return () => {
@@ -66,11 +44,6 @@ function randomSequence(start: number, end: number, seed: number): number[] {
     sequence.push(lo + Math.floor(rng() * span));
   }
   return sequence;
-}
-
-function buildNote(midiPitches: number[], duration: number, tuplet: number | null): string {
-  const head = `(${midiPitches.join(' ')}).${duration}`;
-  return tuplet ? `${head}{tu ${tuplet}}` : head;
 }
 
 function buildBeat(beatIndex: number, subdivisions: number): string {

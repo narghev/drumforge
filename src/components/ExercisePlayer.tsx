@@ -32,6 +32,17 @@ export function ExercisePlayer({ exercise, config }: Props) {
     onZero: totalSeconds > 0 ? () => apiRef.current?.stop() : undefined,
   });
 
+  // After the timer expires (`remaining === 0`) and alphaTab has actually
+  // stopped (`!playing`), reset the displayed timer back to its configured
+  // value so the user can press Play again. We can't reset directly inside
+  // the countdown's onZero callback — that runs from inside a setState
+  // updater, where setting state again behaves unreliably.
+  useEffect(() => {
+    if (totalSeconds > 0 && remaining === 0 && !playing) {
+      resetTimer();
+    }
+  }, [remaining, playing, totalSeconds, resetTimer]);
+
   useEffect(() => {
     if (!containerRef.current || !scrollRef.current) return;
 
