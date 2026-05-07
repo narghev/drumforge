@@ -10,8 +10,8 @@ The usual expectations still apply: build green, behavior verified by hand or te
 
 ## Stack
 
-- React 18+ / TypeScript (strict mode)
-- Vite
+- React 19 / TypeScript (strict mode)
+- Vite 7
 - Tailwind CSS
 - [`@coderline/alphatab`](https://www.npmjs.com/package/@coderline/alphatab) for notation rendering and playback
 - `react-router-dom` v7

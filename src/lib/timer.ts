@@ -8,15 +8,21 @@ interface UseCountdownOptions {
 
 export function useCountdown({ totalSeconds, running, onZero }: UseCountdownOptions) {
   const [remaining, setRemaining] = useState(totalSeconds);
+  // Reset the countdown whenever the configured length changes. Comparing the
+  // previous value during render (instead of in an effect) avoids React 19's
+  // `react-hooks/set-state-in-effect` warning and the cascading-render cost
+  // it points at — see https://react.dev/learn/you-might-not-need-an-effect.
+  const [prevTotal, setPrevTotal] = useState(totalSeconds);
+  if (prevTotal !== totalSeconds) {
+    setPrevTotal(totalSeconds);
+    setRemaining(totalSeconds);
+  }
+
   const onZeroRef = useRef(onZero);
 
   useEffect(() => {
     onZeroRef.current = onZero;
   }, [onZero]);
-
-  useEffect(() => {
-    setRemaining(totalSeconds);
-  }, [totalSeconds]);
 
   useEffect(() => {
     if (!running) return;

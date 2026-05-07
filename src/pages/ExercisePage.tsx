@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { getExercise } from '../exercises/registry';
 import { ExercisePlayer } from '../components/ExercisePlayer';
@@ -44,10 +44,15 @@ function ExerciseView({ exercise }: { exercise: ReturnType<typeof getExercise> &
   // Each transition into random mode picks a fresh seed, so the URL is just
   // an "is randomized" indicator (?random=true), not a reproducible pattern.
   const [randomSeed, setRandomSeed] = useState(() => (random ? makeRandomSeed() : 0));
-
-  useEffect(() => {
+  // Re-roll the seed when `random` flips. Comparing the previous value during
+  // render (rather than in an effect) sidesteps React 19's
+  // `react-hooks/set-state-in-effect` rule — see
+  // https://react.dev/learn/you-might-not-need-an-effect.
+  const [prevRandom, setPrevRandom] = useState(random);
+  if (prevRandom !== random) {
+    setPrevRandom(random);
     setRandomSeed(random ? makeRandomSeed() : 0);
-  }, [random]);
+  }
 
   const effectiveConfig = useMemo(
     () => (random ? { ...config, seed: randomSeed } : config),
