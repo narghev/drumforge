@@ -53,7 +53,7 @@ function ExerciseView({ exercise }: { exercise: ReturnType<typeof getExercise> &
   );
 
   return (
-    <div className="mx-auto flex h-screen max-w-6xl flex-col gap-4 px-6 py-6">
+    <div className="flex h-screen w-full flex-col gap-4 px-6 py-6">
       <Link to="/" className="text-sm text-accent-600 hover:text-accent-700 hover:underline dark:text-accent-400 dark:hover:text-accent-300">
         ← Back to exercises
       </Link>

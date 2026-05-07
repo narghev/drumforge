@@ -1,17 +1,14 @@
 import type { ConfigField, ExerciseConfig } from '../types';
+import {
+  bpmField,
+  countInField,
+  metronomeField,
+  timerMinutesField,
+  timerSecondsField,
+} from '../fields';
 
 export const configFields: ConfigField[] = [
-  {
-    key: 'bpm',
-    label: 'BPM',
-    type: 'number',
-    default: 60,
-    min: 30,
-    max: 300,
-    step: 1,
-    enabled: true,
-    group: 'Tempo',
-  },
+  bpmField,
   {
     key: 'start',
     label: 'Start',
@@ -54,46 +51,10 @@ export const configFields: ConfigField[] = [
     hidden: true,
     group: 'Pattern',
   },
-  {
-    key: 'timerMinutes',
-    label: 'Minutes',
-    type: 'number',
-    default: 15,
-    min: 0,
-    max: 180,
-    step: 1,
-    enabled: true,
-    group: 'Timer',
-  },
-  {
-    key: 'timerSeconds',
-    label: 'Seconds',
-    type: 'number',
-    default: 0,
-    min: 0,
-    max: 59,
-    step: 1,
-    enabled: true,
-    group: 'Timer',
-  },
-  {
-    key: 'metronome',
-    label: 'Metronome',
-    type: 'boolean',
-    default: true,
-    enabled: true,
-    group: 'Playback',
-    description: 'Play a click on every beat during playback.',
-  },
-  {
-    key: 'countIn',
-    label: 'Count-in',
-    type: 'boolean',
-    default: true,
-    enabled: true,
-    group: 'Playback',
-    description: 'Play one bar of clicks before playback starts.',
-  },
+  timerMinutesField,
+  timerSecondsField,
+  metronomeField,
+  countInField,
 ];
 
 export const defaultConfig: ExerciseConfig = Object.fromEntries(
