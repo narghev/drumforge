@@ -1,0 +1,6 @@
+# Don't count config/build files toward language stats
+*.config.js linguist-vendored
+*.config.cjs linguist-vendored
+*.config.mjs linguist-vendored
+public/** linguist-vendored
+pnpm-lock.yaml linguist-generated
