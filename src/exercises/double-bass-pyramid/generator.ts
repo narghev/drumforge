@@ -1,6 +1,12 @@
 import type { ExerciseConfig } from '../types';
 
-const KICK = 36;
+// Two GM percussion slots so we can alternate feet on the kick drum:
+//   - Bass Drum 1 (MIDI 36) → right foot ("R")
+//   - Acoustic Bass Drum (MIDI 35) → left foot ("L")
+// Even global subdivisions in the bar use R; odd use L → continuous
+// R L R L R L … pattern across the whole bar.
+const KICK_RIGHT = 36;
+const KICK_LEFT = 35;
 const SNARE = 38;
 const HIHAT_CLOSED = 42;
 
@@ -73,7 +79,12 @@ function buildBeat(beatIndex: number, subdivisions: number): string {
   const isBackbeat = beatIndex === 1 || beatIndex === 3;
   const tokens: string[] = [];
   for (let i = 0; i < subdivisions; i++) {
-    const chord: number[] = [KICK];
+    // Alternate kick across the whole bar so feet stay coordinated.
+    // Every bar's kick count is `4 * subdivisions`, which is always even,
+    // so each new bar consistently starts on the right foot.
+    const globalIndex = beatIndex * subdivisions + i;
+    const kick = globalIndex % 2 === 0 ? KICK_RIGHT : KICK_LEFT;
+    const chord: number[] = [kick];
     if (i === 0) {
       if (isBackbeat) chord.push(SNARE);
       chord.push(HIHAT_CLOSED);
