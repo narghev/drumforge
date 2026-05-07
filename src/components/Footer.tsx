@@ -8,8 +8,8 @@ const PROFILE_URL = 'https://github.com/narghev';
  */
 export function Footer() {
   return (
-    <footer className="mt-auto border-t border-gray-200 pt-6 pb-8 dark:border-gray-800">
-      <div className="flex flex-col items-start gap-3 text-sm text-gray-600 dark:text-gray-400 sm:flex-row sm:items-center sm:justify-between">
+    <footer className="mt-auto border-t border-gray-200 pt-3 pb-4 sm:pt-6 sm:pb-8 dark:border-gray-800">
+      <div className="flex flex-row items-center justify-between gap-2 text-xs text-gray-600 sm:gap-3 sm:text-sm dark:text-gray-400">
         <p>
           Built by{' '}
           <a
@@ -22,7 +22,7 @@ export function Footer() {
           </a>
         </p>
         <div className="flex items-center gap-2">
-          <span>Drumforge is open-source</span>
+          <span className="hidden sm:inline">Drumforge is open-source</span>
           <a
             href={REPO_URL}
             target="_blank"

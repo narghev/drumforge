@@ -59,19 +59,60 @@ function ExerciseView({ exercise }: { exercise: ReturnType<typeof getExercise> &
     [config, random, randomSeed],
   );
 
+  // The config panel is collapsed by default on mobile to keep the score
+  // above the fold; on `sm:` and up it's always visible regardless of state.
+  const [configOpen, setConfigOpen] = useState(false);
+
   return (
-    <div className="flex h-screen w-full flex-col gap-4 px-6 py-6">
-      <div className="fixed right-4 top-4 z-50">
-        <ShareButton />
+    <div className="flex h-screen w-full flex-col gap-3 px-4 py-4 sm:gap-4 sm:px-6 sm:py-6">
+      <div className="flex items-start justify-between gap-3">
+        <Link
+          to="/"
+          className="text-sm text-accent-600 hover:text-accent-700 hover:underline dark:text-accent-400 dark:hover:text-accent-300"
+        >
+          ← Back to exercises
+        </Link>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setConfigOpen((open) => !open)}
+            aria-expanded={configOpen}
+            aria-controls="exercise-config"
+            aria-label={configOpen ? 'Hide settings' : 'Show settings'}
+            className="inline-flex items-center gap-2 rounded-md border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 transition hover:border-accent-400 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-accent-400/40 sm:hidden dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:border-accent-400 dark:hover:text-gray-100"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              width="16"
+              height="16"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <line x1="3" y1="6" x2="21" y2="6" />
+              <line x1="3" y1="12" x2="21" y2="12" />
+              <line x1="3" y1="18" x2="21" y2="18" />
+            </svg>
+            <span>Settings</span>
+          </button>
+          <ShareButton />
+        </div>
       </div>
-      <Link to="/" className="text-sm text-accent-600 hover:text-accent-700 hover:underline dark:text-accent-400 dark:hover:text-accent-300">
-        ← Back to exercises
-      </Link>
       <header>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{exercise.name}</h1>
-        <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">{exercise.description}</p>
+        <h1 className="text-xl font-bold text-gray-900 sm:text-2xl dark:text-gray-100">
+          {exercise.name}
+        </h1>
+        <p className="mt-1 hidden text-sm text-gray-600 sm:block dark:text-gray-400">
+          {exercise.description}
+        </p>
       </header>
-      <ConfigPanel exercise={exercise} config={config} onChange={setConfig} />
+      <div id="exercise-config" className={configOpen ? '' : 'hidden sm:block'}>
+        <ConfigPanel exercise={exercise} config={config} onChange={setConfig} />
+      </div>
       <div className="flex min-h-0 flex-1 flex-col">
         <ExercisePlayer exercise={exercise} config={effectiveConfig} />
       </div>

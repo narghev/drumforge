@@ -23,8 +23,8 @@ export function ConfigPanel({ exercise, config, onChange }: Props) {
   const groupArray = Array.from(groups.entries());
 
   return (
-    <div className="rounded-lg border border-gray-200 bg-white px-5 py-3 dark:border-gray-800 dark:bg-gray-900">
-      <div className="flex flex-wrap items-end gap-x-8 gap-y-4">
+    <div className="rounded-lg border border-gray-200 bg-white px-4 py-3 sm:px-5 dark:border-gray-800 dark:bg-gray-900">
+      <div className="flex flex-wrap items-end gap-x-4 gap-y-4 sm:gap-x-8">
         {groupArray.map(([groupName, fields], i) => (
           <section
             key={groupName}
