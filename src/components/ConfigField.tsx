@@ -13,7 +13,7 @@ interface Props {
 
 export function ConfigField({ field, value, onChange, effectiveMin, effectiveMax, actionLabel }: Props) {
   const baseInput =
-    'w-full rounded-md border border-gray-300 bg-white px-2 py-1.5 text-sm text-gray-900 transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-400';
+    'w-full rounded-md border border-gray-300 bg-white px-2 py-1.5 text-sm text-gray-900 transition focus:border-accent-400 focus:outline-none focus:ring-2 focus:ring-accent-400/30 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-400 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:focus:border-accent-400 dark:disabled:bg-gray-900 dark:disabled:text-gray-500';
 
   const min = effectiveMin ?? field.min;
   const max = effectiveMax ?? field.max;
@@ -22,11 +22,13 @@ export function ConfigField({ field, value, onChange, effectiveMin, effectiveMax
     <span
       title={field.description}
       className={`text-[10px] font-medium uppercase tracking-wider ${
-        field.enabled ? 'text-gray-500' : 'text-gray-400'
+        field.enabled
+          ? 'text-gray-500 dark:text-gray-400'
+          : 'text-gray-400 dark:text-gray-500'
       } ${field.description ? 'cursor-help' : ''}`}
     >
       {field.label}
-      {!field.enabled && <span className="ml-1 text-gray-300">(soon)</span>}
+      {!field.enabled && <span className="ml-1 text-gray-300 dark:text-gray-600">(soon)</span>}
     </span>
   );
 
@@ -54,7 +56,9 @@ export function ConfigField({ field, value, onChange, effectiveMin, effectiveMax
       <label
         htmlFor={`field-${field.key}`}
         className={`flex items-center gap-2 self-end pb-2 text-sm ${
-          field.enabled ? 'text-gray-800' : 'text-gray-400'
+          field.enabled
+            ? 'text-gray-800 dark:text-gray-200'
+            : 'text-gray-400 dark:text-gray-500'
         } ${field.description ? 'cursor-help' : 'cursor-pointer'}`}
         title={field.description}
       >
@@ -64,7 +68,7 @@ export function ConfigField({ field, value, onChange, effectiveMin, effectiveMax
           checked={Boolean(value)}
           disabled={!field.enabled}
           onChange={(e) => onChange(e.target.checked)}
-          className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 disabled:cursor-not-allowed"
+          className="h-4 w-4 rounded border-gray-300 text-accent-500 focus:ring-accent-400 disabled:cursor-not-allowed dark:border-gray-700 dark:bg-gray-950"
         />
         <span>{field.label}</span>
       </label>
@@ -99,10 +103,12 @@ export function ConfigField({ field, value, onChange, effectiveMin, effectiveMax
         disabled={!field.enabled}
         onClick={() => onChange(true)}
         title={field.description}
-        className="self-end rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+        className="self-end rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 transition hover:border-accent-400 hover:bg-accent-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-200 dark:hover:border-accent-400 dark:hover:bg-accent-400/10"
       >
         {actionLabel ?? field.label}
-        {!field.enabled && <span className="ml-1 text-xs text-gray-400">(soon)</span>}
+        {!field.enabled && (
+          <span className="ml-1 text-xs text-gray-400 dark:text-gray-500">(soon)</span>
+        )}
       </button>
     );
   }

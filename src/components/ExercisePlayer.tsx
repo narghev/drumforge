@@ -3,6 +3,7 @@ import { AlphaTabApi, synth } from '@coderline/alphatab';
 import type { ExerciseConfig, ExerciseDefinition } from '../exercises/types';
 import { buildSettings } from '../lib/alphatab-setup';
 import { useCountdown } from '../lib/timer';
+import { useTheme } from '../lib/useTheme';
 import { Timer } from './Timer';
 
 interface Props {
@@ -16,6 +17,7 @@ export function ExercisePlayer({ exercise, config }: Props) {
   const apiRef = useRef<AlphaTabApi | null>(null);
   const [ready, setReady] = useState(false);
   const [playing, setPlaying] = useState(false);
+  const [theme] = useTheme();
 
   const timerMinutes = Math.max(0, Number(config.timerMinutes) || 0);
   const timerSecondsField = Math.max(0, Number(config.timerSeconds) || 0);
@@ -30,7 +32,7 @@ export function ExercisePlayer({ exercise, config }: Props) {
   useEffect(() => {
     if (!containerRef.current || !scrollRef.current) return;
 
-    const api = new AlphaTabApi(containerRef.current, buildSettings(scrollRef.current));
+    const api = new AlphaTabApi(containerRef.current, buildSettings(scrollRef.current, theme));
     apiRef.current = api;
     api.isLooping = true;
 
@@ -50,6 +52,11 @@ export function ExercisePlayer({ exercise, config }: Props) {
       setReady(false);
       setPlaying(false);
     };
+    // The theme is read once at mount. The toggle is intentionally only
+    // rendered on the home page, so users pick their theme there before
+    // entering an exercise — this side-steps alphaTab's SVG/glyph caching
+    // that makes mid-session theme switches unreliable.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [exercise]);
 
   useEffect(() => {
@@ -69,17 +76,17 @@ export function ExercisePlayer({ exercise, config }: Props) {
     <div className="flex h-full flex-col gap-4">
       <div
         ref={scrollRef}
-        className="min-h-0 flex-1 overflow-auto rounded-lg border border-gray-200 bg-white"
+        className="min-h-0 flex-1 overflow-auto rounded-lg border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-950"
       >
         <div ref={containerRef} />
       </div>
 
-      <div className="flex flex-wrap items-center gap-3 rounded-lg border border-gray-200 bg-white p-3">
+      <div className="flex flex-wrap items-center gap-3 rounded-lg border border-gray-200 bg-white p-3 dark:border-gray-800 dark:bg-gray-900">
         <button
           type="button"
           onClick={handleStop}
           disabled={!ready}
-          className="rounded-md bg-gray-100 px-4 py-2 text-sm font-medium text-gray-800 transition hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-50"
+          className="rounded-md bg-gray-100 px-4 py-2 text-sm font-medium text-gray-800 transition hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
         >
           ■ Stop
         </button>
@@ -87,11 +94,11 @@ export function ExercisePlayer({ exercise, config }: Props) {
           type="button"
           onClick={handlePlayPause}
           disabled={!ready}
-          className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+          className="rounded-md bg-accent-400 px-4 py-2 text-sm font-medium text-gray-900 transition hover:bg-accent-500 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {playing ? '⏸ Pause' : '▶ Play'}
         </button>
-        {!ready && <span className="text-sm text-gray-500">Loading soundfont…</span>}
+        {!ready && <span className="text-sm text-gray-500 dark:text-gray-400">Loading soundfont…</span>}
         <div className="ml-auto">
           <Timer remainingSeconds={remaining} totalSeconds={totalSeconds} />
         </div>

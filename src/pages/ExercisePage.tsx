@@ -13,12 +13,12 @@ export function ExercisePage() {
   if (!exercise) {
     return (
       <div className="mx-auto max-w-3xl px-6 py-10 text-center">
-        <h1 className="text-2xl font-bold text-gray-900">Exercise not found</h1>
-        <p className="mt-2 text-gray-600">
-          The exercise <code className="rounded bg-gray-100 px-1">{id}</code> is not in the
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Exercise not found</h1>
+        <p className="mt-2 text-gray-600 dark:text-gray-400">
+          The exercise <code className="rounded bg-gray-100 px-1 dark:bg-gray-800 dark:text-gray-200">{id}</code> is not in the
           registry.
         </p>
-        <Link to="/" className="mt-6 inline-block text-blue-600 hover:underline">
+        <Link to="/" className="mt-6 inline-block text-accent-600 hover:text-accent-700 hover:underline dark:text-accent-400 dark:hover:text-accent-300">
           ← Back to exercises
         </Link>
       </div>
@@ -54,12 +54,12 @@ function ExerciseView({ exercise }: { exercise: ReturnType<typeof getExercise> &
 
   return (
     <div className="mx-auto flex h-screen max-w-6xl flex-col gap-4 px-6 py-6">
-      <Link to="/" className="text-sm text-blue-600 hover:underline">
+      <Link to="/" className="text-sm text-accent-600 hover:text-accent-700 hover:underline dark:text-accent-400 dark:hover:text-accent-300">
         ← Back to exercises
       </Link>
       <header>
-        <h1 className="text-2xl font-bold text-gray-900">{exercise.name}</h1>
-        <p className="mt-1 text-sm text-gray-600">{exercise.description}</p>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{exercise.name}</h1>
+        <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">{exercise.description}</p>
       </header>
       <ConfigPanel exercise={exercise} config={config} onChange={setConfig} />
       <div className="flex min-h-0 flex-1 flex-col">
