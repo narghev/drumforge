@@ -1,5 +1,7 @@
 # Drumforge
 
+![Drumforge — Double Bass Pyramid exercise page in light and dark themes](./assets/screenshot.png)
+
 A free, browser-based interactive drum exercise website with synchronized scrolling notation, configurable BPM, randomization, metronome, count-in, and a built-in practice timer.
 
 🥁 **[drumforge.app](https://drumforge.app)**
