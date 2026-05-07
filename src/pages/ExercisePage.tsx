@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import { getExercise } from '../exercises/registry';
 import { ExercisePlayer } from '../components/ExercisePlayer';
 import { ConfigPanel } from '../components/ConfigPanel';
+import { Footer } from '../components/Footer';
 import { ShareButton } from '../components/ShareButton';
 import { useExerciseConfig } from '../lib/useExerciseConfig';
 import { useDocumentTitle } from '../lib/useDocumentTitle';
@@ -69,6 +70,7 @@ function ExerciseView({ exercise }: { exercise: ReturnType<typeof getExercise> &
       <div className="flex min-h-0 flex-1 flex-col">
         <ExercisePlayer exercise={exercise} config={effectiveConfig} />
       </div>
+      <Footer />
     </div>
   );
 }
