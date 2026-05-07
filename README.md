@@ -1,69 +1,29 @@
 # Drumforge
 
-A free, browser-based drum exercise platform with synchronized scrolling notation, configurable BPM, timers, and shareable URLs. No login, no subscription.
+A free, browser-based interactive drum exercise website with synchronized scrolling notation, configurable BPM, randomization, metronome, count-in, and a built-in practice timer.
 
-The MVP ships with one exercise: **Double Bass Pyramid** — kicks-per-beat ramps from 1 up to 8 and back down (15 bars total) over a steady hi-hat / backbeat snare pattern.
+🌐 **[drumforge.app](https://drumforge.app)**
 
-## Stack
+The first exercise is **Double Bass Pyramid** — kicks-per-beat ramps from one subdivision up to another and back, with alternating right/left foot patterns over a steady hi-hat / backbeat snare.
 
-- React 18+ / TypeScript (strict)
-- Vite
-- Tailwind CSS
-- [`@coderline/alphatab`](https://www.npmjs.com/package/@coderline/alphatab) for notation rendering and playback
-- `react-router-dom` v7
+## Exercises
+- **Double Bass Pyramid** (1 to 8 kicks per beat, up and down)
 
-## Run it
+## Features
 
-This project uses **`pnpm`** exclusively. Do not use `npm` or `yarn` — `pnpm-lock.yaml` is the lockfile.
+- Synced scrolling notation
+- BPM slider, metronome, and count-in
+- Practice timer
+- Randomization mode
+- Shareable URLs — every config knob round-trips through query parameters, so a copy-pasted link reproduces the exact setup
 
-```bash
-pnpm install
-pnpm dev      # http://localhost:5173
-pnpm build    # production bundle
-pnpm preview  # serve the production build locally
-```
+## Special thanks
 
-## Adding a new exercise
+Drumforge stands entirely on the shoulders of **[alphaTab](https://github.com/CoderLine/alphaTab)** — an open-source music-notation rendering and playback library that does the actual heavy lifting of turning text into engraved drum scores with synchronized audio.
 
-The whole architecture is pulled by a registry — to add an exercise, drop a folder under `src/exercises/` and register it.
+## Contributing
 
-1. `src/exercises/<your-exercise>/`
-   - `metadata.ts` — id (slug), name, description, difficulty
-   - `config.ts` — `ConfigField[]` and `defaultConfig`
-   - `generator.ts` — `(config) => alphaTexString`
-   - `index.ts` — exports a `ExerciseDefinition`
-2. Add the import + entry to `src/exercises/registry.ts`.
-
-That's it — the home page lists it, and the player picks it up by id at `/exercises/<slug>`.
-
-## Shareable URLs
-
-Every `ConfigField` round-trips through query parameters. Copy a configured URL, send it to a friend, and they land on the same setup.
-
-- Hydrated from `URLSearchParams` on mount; missing keys fall back to `defaultConfig`.
-- Only non-default values are written back to the URL (short, intentional links).
-- Type coercion + range validation per field type. Invalid values are dropped with a `console.warn`.
-- Disabled fields still hydrate from the URL — share `?start=3&end=6` today even though those inputs are greyed out.
-
-Example: `http://localhost:5173/exercises/double-bass-pyramid?bpm=120&timerSeconds=600`
-
-## Self-hosted assets
-
-The Bravura music font (OFL) and the bundled SonivoxBundled SoundFont (alphaTab default) are copied into `public/alphatab/` so the player works without external CDN calls. License files are kept alongside the binaries.
-
-## Project layout
-
-```
-src/
-├── exercises/         # exercise registry + per-exercise folders
-├── components/        # ExercisePlayer, ConfigPanel, Timer, …
-├── pages/             # HomePage, ExercisePage
-├── lib/               # alphatab-setup, useExerciseConfig, useCountdown
-├── App.tsx            # router
-└── main.tsx
-```
-
-See `CLAUDE.md` for the full specification and architectural decisions.
+Bug reports, exercise suggestions, and PRs are welcome. See **[CONTRIBUTING.md](./CONTRIBUTING.md)** for local setup, architecture notes, and how to add a new exercise.
 
 ## License
 
