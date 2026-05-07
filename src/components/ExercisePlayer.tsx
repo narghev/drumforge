@@ -23,6 +23,9 @@ export function ExercisePlayer({ exercise, config }: Props) {
   const timerSecondsField = Math.max(0, Number(config.timerSeconds) || 0);
   const totalSeconds = timerMinutes * 60 + timerSecondsField;
 
+  const metronome = Boolean(config.metronome);
+  const countIn = Boolean(config.countIn);
+
   const { remaining, reset: resetTimer } = useCountdown({
     totalSeconds,
     running: playing && totalSeconds > 0,
@@ -62,6 +65,15 @@ export function ExercisePlayer({ exercise, config }: Props) {
   useEffect(() => {
     apiRef.current?.tex(exercise.generateAlphaTex(config));
   }, [exercise, config]);
+
+  // Metronome / count-in volumes are AlphaTabApi properties — push them
+  // imperatively whenever the toggles change. 0 = off; 0.5 = 50% volume.
+  useEffect(() => {
+    const api = apiRef.current;
+    if (!api) return;
+    api.metronomeVolume = metronome ? 0.5 : 0;
+    api.countInVolume = countIn ? 0.5 : 0;
+  }, [metronome, countIn]);
 
   const handlePlayPause = () => {
     apiRef.current?.playPause();

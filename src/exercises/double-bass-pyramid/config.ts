@@ -76,6 +76,24 @@ export const configFields: ConfigField[] = [
     enabled: true,
     group: 'Timer',
   },
+  {
+    key: 'metronome',
+    label: 'Metronome',
+    type: 'boolean',
+    default: true,
+    enabled: true,
+    group: 'Playback',
+    description: 'Play a click on every beat during playback.',
+  },
+  {
+    key: 'countIn',
+    label: 'Count-in',
+    type: 'boolean',
+    default: true,
+    enabled: true,
+    group: 'Playback',
+    description: 'Play one bar of clicks before playback starts.',
+  },
 ];
 
 export const defaultConfig: ExerciseConfig = Object.fromEntries(
