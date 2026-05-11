@@ -15,7 +15,7 @@ function pyramidSequence(start: number, end: number): number[] {
   const up: number[] = [];
   for (let i = lo; i <= hi; i++) up.push(i);
   const down: number[] = [];
-  for (let i = hi - 1; i >= lo; i--) down.push(i);
+  for (let i = hi; i >= lo; i--) down.push(i);
   return [...up, ...down];
 }
 
