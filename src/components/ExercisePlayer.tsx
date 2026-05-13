@@ -25,6 +25,7 @@ export function ExercisePlayer({ exercise, config }: Props) {
 
   const metronome = Boolean(config.metronome);
   const countIn = Boolean(config.countIn);
+  const muteTrack = Boolean(config.muteTrack);
 
   const { remaining, reset: resetTimer } = useCountdown({
     totalSeconds,
@@ -85,6 +86,22 @@ export function ExercisePlayer({ exercise, config }: Props) {
     api.metronomeVolume = metronome ? 0.5 : 0;
     api.countInVolume = countIn ? 0.5 : 0;
   }, [metronome, countIn]);
+
+  // Track mute is a per-track flag — each `api.tex()` call rebuilds the score
+  // with fresh tracks that default to unmuted, so we re-apply on `scoreLoaded`
+  // as well as when the toggle itself changes.
+  useEffect(() => {
+    const api = apiRef.current;
+    if (!api) return;
+    const applyMute = () => {
+      if (api.score) api.changeTrackMute(api.score.tracks, muteTrack);
+    };
+    applyMute();
+    api.scoreLoaded.on(applyMute);
+    return () => {
+      api.scoreLoaded.off(applyMute);
+    };
+  }, [muteTrack]);
 
   const handlePlayPause = () => {
     apiRef.current?.playPause();

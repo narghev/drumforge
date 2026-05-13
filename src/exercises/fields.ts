@@ -81,6 +81,16 @@ export const countInField: ConfigField = {
   description: 'Play one bar of clicks before playback starts.',
 };
 
+export const muteTrackField: ConfigField = {
+  key: 'muteTrack',
+  label: 'Mute track',
+  type: 'boolean',
+  default: false,
+  enabled: true,
+  group: 'Playback',
+  description: 'Silence the notation track. Useful for practicing along with just the metronome.',
+};
+
 export const moneyBeatField: ConfigField = {
   key: 'moneyBeat',
   label: 'Money beat',

@@ -4,6 +4,7 @@ import {
   countInField,
   metronomeField,
   moneyBeatField,
+  muteTrackField,
   timerMinutesField,
   timerSecondsField,
 } from '../fields';
@@ -28,6 +29,7 @@ export const configFields: ConfigField[] = [
   timerSecondsField,
   metronomeField,
   countInField,
+  muteTrackField,
 ];
 
 export const defaultConfig: ExerciseConfig = Object.fromEntries(

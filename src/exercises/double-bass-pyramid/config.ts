@@ -3,6 +3,7 @@ import {
   bpmField,
   countInField,
   metronomeField,
+  muteTrackField,
   timerMinutesField,
   timerSecondsField,
 } from '../fields';
@@ -55,6 +56,7 @@ export const configFields: ConfigField[] = [
   timerSecondsField,
   metronomeField,
   countInField,
+  muteTrackField,
 ];
 
 export const defaultConfig: ExerciseConfig = Object.fromEntries(
