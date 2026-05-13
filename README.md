@@ -4,7 +4,7 @@
 
 A free, browser-based interactive drum exercise website with synchronized scrolling notation, configurable BPM, randomization, metronome, count-in, and a built-in practice timer.
 
-🥁 **[drumforge.app](https://drumforge.app)**
+🥁 <a href="https://drumforge.app" target="_blank" rel="noopener"><strong>drumforge.app</strong></a>
 
 ## Exercises
 
@@ -21,7 +21,7 @@ A free, browser-based interactive drum exercise website with synchronized scroll
 
 ## Special thanks
 
-Drumforge stands entirely on the shoulders of **[alphaTab](https://github.com/CoderLine/alphaTab)** — an open-source music-notation rendering and playback library that does the actual heavy lifting of turning text into engraved drum scores with synchronized audio.
+Drumforge stands entirely on the shoulders of <a href="https://github.com/CoderLine/alphaTab" target="_blank" rel="noopener"><strong>alphaTab</strong></a> — an open-source music-notation rendering and playback library that does the actual heavy lifting of turning text into engraved drum scores with synchronized audio.
 
 ## Contributing
 
