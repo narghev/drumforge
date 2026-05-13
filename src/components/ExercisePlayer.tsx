@@ -79,12 +79,12 @@ export function ExercisePlayer({ exercise, config }: Props) {
   }, [exercise, config]);
 
   // Metronome / count-in volumes are AlphaTabApi properties — push them
-  // imperatively whenever the toggles change. 0 = off; 0.5 = 50% volume.
+  // imperatively whenever the toggles change. 0 = off; 1 = 100% volume.
   useEffect(() => {
     const api = apiRef.current;
     if (!api) return;
-    api.metronomeVolume = metronome ? 0.5 : 0;
-    api.countInVolume = countIn ? 0.5 : 0;
+    api.metronomeVolume = metronome ? 1 : 0;
+    api.countInVolume = countIn ? 1 : 0;
   }, [metronome, countIn]);
 
   // Track mute is a per-track flag — each `api.tex()` call rebuilds the score
