@@ -30,10 +30,13 @@ export interface FieldConstraints {
   max?: number;
 }
 
+export type ExerciseTopic = 'hands' | 'feet';
+
 export interface ExerciseDefinition {
   id: string;
   name: string;
   description: string;
+  topic: ExerciseTopic;
   difficulty?: 'beginner' | 'intermediate' | 'advanced';
   configFields: ConfigField[];
   defaultConfig: ExerciseConfig;
