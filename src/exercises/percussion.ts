@@ -9,6 +9,7 @@ export const KICK_RIGHT = 36;
 export const KICK_LEFT = 35;
 export const SNARE = 38;
 export const HIHAT_CLOSED = 42;
+export const HIHAT_PEDAL = 44;
 
 /** Subdivisions-per-beat values that need a `{tu N}` tuplet wrapper. */
 export const TUPLET_SUBDIVISIONS: ReadonlySet<number> = new Set([3, 5, 6, 7]);
