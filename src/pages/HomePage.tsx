@@ -1,11 +1,8 @@
 import { ExerciseList } from '../components/ExerciseList';
 import { Footer } from '../components/Footer';
 import { ThemeToggle } from '../components/ThemeToggle';
-import { useDocumentTitle } from '../lib/useDocumentTitle';
 
 export function HomePage() {
-  useDocumentTitle(undefined);
-
   return (
     <div className="mx-auto flex min-h-screen max-w-5xl flex-col px-6 py-10">
       <header className="mb-8 flex items-start justify-between gap-4">

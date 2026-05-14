@@ -6,7 +6,7 @@ import { ConfigPanel } from '../components/ConfigPanel';
 import { Footer } from '../components/Footer';
 import { ShareButton } from '../components/ShareButton';
 import { useExerciseConfig } from '../lib/useExerciseConfig';
-import { useDocumentTitle } from '../lib/useDocumentTitle';
+import { useDocumentMeta } from '../lib/useDocumentMeta';
 
 export function ExercisePage() {
   const { id } = useParams<{ id: string }>();
@@ -35,7 +35,11 @@ function makeRandomSeed(): number {
 }
 
 function ExerciseView({ exercise }: { exercise: ReturnType<typeof getExercise> & {} }) {
-  useDocumentTitle(`${exercise.name} · Drumforge`);
+  useDocumentMeta({
+    title: `${exercise.name} · Drumforge`,
+    description: exercise.description,
+    path: `/exercises/${exercise.id}`,
+  });
 
   const [config, setConfig] = useExerciseConfig(exercise);
   const random = Boolean(config.random);
